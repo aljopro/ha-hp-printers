@@ -109,7 +109,10 @@ class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
             manufacturer=(consumable.brand if consumable else None) or MANUFACTURER,
             model=consumable.part_number if consumable else None,
             serial_number=consumable.serial_number if consumable else None,
-            name=f"{coordinator.config_entry.title} {pretty} Cartridge",
+            # "Cartridge <colour>" rather than "<colour> Cartridge" so the
+            # cartridges sort as a contiguous block instead of being split
+            # apart by the Copier and Scanner sub-devices.
+            name=f"{coordinator.config_entry.title} Cartridge {pretty}",
         )
 
     @property
