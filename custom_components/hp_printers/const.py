@@ -57,6 +57,19 @@ STATUS_OPTIONS: Final = [
 BRAND_GENUINE: Final = "genuinehp"
 BRAND_CLONE: Final = "clone"
 
+# Noun used in a consumable's device name, chosen from ConsumableTypeEnum.
+# "Cartridge" is a reasonable default for both toner and ink; a printhead is
+# the case where it would be plainly wrong. Capability documents are
+# device-specific -- a laser declares only "toner" -- so unknown values fall
+# back rather than being guessed at.
+CONSUMABLE_NOUNS: Final = {
+    "printhead": "Printhead",
+    "inktank": "Ink Tank",
+    "drum": "Drum",
+    "maintenancekit": "Maintenance Kit",
+}
+DEFAULT_CONSUMABLE_NOUN: Final = "Cartridge"
+
 COLOR_NAMES: Final = {
     "K": "black",
     "C": "cyan",

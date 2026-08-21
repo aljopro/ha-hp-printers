@@ -4,7 +4,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import CONSUMABLE_NOUNS, DEFAULT_CONSUMABLE_NOUN, DOMAIN, MANUFACTURER
 from .coordinator import HPPrinterDataUpdateCoordinator
 from .models import Consumable
 
@@ -102,6 +102,13 @@ class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
         colour = (consumable.color_name if consumable else None) or label_code
         pretty = colour.replace("_", " ").title()
 
+        # The noun leads the colour so consumables sort as one contiguous
+        # block rather than being split apart by the other sub-devices.
+        kind = (consumable.consumable_type if consumable else None) or ""
+        noun = CONSUMABLE_NOUNS.get(
+            kind.strip().lower().replace(" ", ""), DEFAULT_CONSUMABLE_NOUN
+        )
+
         self._attr_unique_id = f"{printer_serial}_{label_code}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{printer_serial}_{label_code}")},
@@ -109,10 +116,7 @@ class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
             manufacturer=(consumable.brand if consumable else None) or MANUFACTURER,
             model=consumable.part_number if consumable else None,
             serial_number=consumable.serial_number if consumable else None,
-            # "Cartridge <colour>" rather than "<colour> Cartridge" so the
-            # cartridges sort as a contiguous block instead of being split
-            # apart by the Copier and Scanner sub-devices.
-            name=f"{coordinator.config_entry.title} Cartridge {pretty}",
+            name=f"{coordinator.config_entry.title} {noun} {pretty}",
         )
 
     @property
