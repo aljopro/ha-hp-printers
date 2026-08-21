@@ -1,7 +1,5 @@
 """Coordinator for the HP Printers integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from time import monotonic

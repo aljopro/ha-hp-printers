@@ -7,13 +7,11 @@ available resources, and each resource is exposed as a paired
 (current values). Everything below targets the Dyn documents.
 """
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 import logging
 from typing import Any
-from xml.etree.ElementTree import Element  # noqa: N817
+from xml.etree.ElementTree import Element
 
 from aiohttp import ClientError, ClientSession, ClientTimeout
 from defusedxml import ElementTree as DefusedET
@@ -182,7 +180,8 @@ class LEDMClient:
 
         try:
             root = DefusedET.fromstring(body)
-        except Exception as err:  # noqa: BLE001 - defusedxml raises several types
+        # defusedxml raises several distinct exception types.
+        except Exception as err:
             raise HPPrinterParseError(f"Invalid XML from {endpoint}: {err}") from err
 
         return _strip_namespaces(root)
@@ -331,32 +330,32 @@ class LEDMClient:
         events: list[EventLogEntry] = []
         event_log = _find(logs_doc, "EventLog")
         if event_log is not None:
-            for node in event_log.iter("Event"):
-                events.append(
-                    EventLogEntry(
-                        sequence=_int(node, "SequenceNumber"),
-                        code=_text(node, "EventCode"),
-                        impressions=_int(node, "TotalImpressions"),
-                    )
+            events.extend(
+                EventLogEntry(
+                    sequence=_int(node, "SequenceNumber"),
+                    code=_text(node, "EventCode"),
+                    impressions=_int(node, "TotalImpressions"),
                 )
+                for node in event_log.iter("Event")
+            )
         events.sort(
-            key=lambda e: (e.sequence if e.sequence is not None else -1), reverse=True
+            key=lambda e: e.sequence if e.sequence is not None else -1, reverse=True
         )
 
         jobs: list[JobEntry] = []
         job_list = _find(logs_doc, "JobList")
         if job_list is not None:
-            for node in job_list.iter("JobEntry"):
-                jobs.append(
-                    JobEntry(
-                        application_id=_text(node, "DriverJobApplicationID"),
-                        user_id=_text(node, "DriverJobUserID"),
-                        name=_text(node, "DriverJobName"),
-                        monochrome_impressions=_int(node, "MonochromeImpressions"),
-                        color_impressions=_int(node, "ColorImpressions"),
-                        total_impressions=_int(node, "TotalImpressions"),
-                    )
+            jobs.extend(
+                JobEntry(
+                    application_id=_text(node, "DriverJobApplicationID"),
+                    user_id=_text(node, "DriverJobUserID"),
+                    name=_text(node, "DriverJobName"),
+                    monochrome_impressions=_int(node, "MonochromeImpressions"),
+                    color_impressions=_int(node, "ColorImpressions"),
+                    total_impressions=_int(node, "TotalImpressions"),
                 )
+                for node in job_list.iter("JobEntry")
+            )
 
         assert_text = _text(logs_doc, "ErrorLog")
         return events, jobs, assert_text

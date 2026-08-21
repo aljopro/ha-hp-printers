@@ -1,7 +1,5 @@
 """Data models for the HP Printers integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -124,5 +122,5 @@ class PrinterData:
             return None
         return max(
             self.events,
-            key=lambda e: (e.sequence if e.sequence is not None else -1),
+            key=lambda e: e.sequence if e.sequence is not None else -1,
         )

@@ -1,7 +1,5 @@
 """Config flow for the HP Printers integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -104,7 +102,9 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors and serial:
                 await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: data[CONF_HOST]})
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: data[CONF_HOST]}
+                )
                 title = (data.get(CONF_NAME) or model or "HP Printer").strip()
                 data.pop(CONF_NAME, None)
                 return self.async_create_entry(title=title, data=data)
@@ -160,7 +160,7 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: HPPrinterConfigEntry,
-    ) -> HPPrintersOptionsFlow:
+    ) -> "HPPrintersOptionsFlow":
         """Return the options flow."""
         return HPPrintersOptionsFlow()
 

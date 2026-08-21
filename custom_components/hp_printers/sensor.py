@@ -1,7 +1,5 @@
 """Sensor platform for the HP Printers integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -19,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import STATUS_OPTIONS
-from .coordinator import HPPrinterConfigEntry, HPPrinterDataUpdateCoordinator
+from .coordinator import HPPrinterConfigEntry
 from .entity import HPConsumableEntity, HPPrinterEntity
 from .models import Consumable, PrinterData, ProductInfo
 
@@ -63,26 +61,65 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         value_fn=lambda data, _info: (
             data.status if data.status in STATUS_OPTIONS else None
         ),
-        attrs_fn=lambda data: {"raw_status": data.status, "message": data.status_message},
+        attrs_fn=lambda data: {
+            "raw_status": data.status,
+            "message": data.status_message,
+        },
     ),
     # --- printer counters ---
-    _counter("printer_total_pages", "printer_total_pages", lambda d: d.printer.total_impressions),
-    _counter("printer_mono_pages", "printer_mono_pages", lambda d: d.printer.monochrome_impressions),
-    _counter("printer_color_pages", "printer_color_pages", lambda d: d.printer.color_impressions),
-    _counter("printer_simplex_sheets", "printer_simplex_sheets", lambda d: d.printer.simplex_sheets),
-    _counter("printer_duplex_sheets", "printer_duplex_sheets", lambda d: d.printer.duplex_sheets),
+    _counter(
+        "printer_total_pages",
+        "printer_total_pages",
+        lambda d: d.printer.total_impressions,
+    ),
+    _counter(
+        "printer_mono_pages",
+        "printer_mono_pages",
+        lambda d: d.printer.monochrome_impressions,
+    ),
+    _counter(
+        "printer_color_pages",
+        "printer_color_pages",
+        lambda d: d.printer.color_impressions,
+    ),
+    _counter(
+        "printer_simplex_sheets",
+        "printer_simplex_sheets",
+        lambda d: d.printer.simplex_sheets,
+    ),
+    _counter(
+        "printer_duplex_sheets",
+        "printer_duplex_sheets",
+        lambda d: d.printer.duplex_sheets,
+    ),
     _counter("printer_jams", "printer_jams", lambda d: d.printer.jam_events),
-    _counter("printer_mispicks", "printer_mispicks", lambda d: d.printer.mispick_events),
+    _counter(
+        "printer_mispicks", "printer_mispicks", lambda d: d.printer.mispick_events
+    ),
     # --- scanner counters ---
     _counter("scanner_images", "scanner_images", lambda d: d.scanner.scan_images),
-    _counter("scanner_adf_images", "scanner_adf_images", lambda d: d.scanner.adf_images),
-    _counter("scanner_flatbed_images", "scanner_flatbed_images", lambda d: d.scanner.flatbed_images),
+    _counter(
+        "scanner_adf_images", "scanner_adf_images", lambda d: d.scanner.adf_images
+    ),
+    _counter(
+        "scanner_flatbed_images",
+        "scanner_flatbed_images",
+        lambda d: d.scanner.flatbed_images,
+    ),
     _counter("scanner_jams", "scanner_jams", lambda d: d.scanner.jam_events),
-    _counter("scanner_mispicks", "scanner_mispicks", lambda d: d.scanner.mispick_events),
+    _counter(
+        "scanner_mispicks", "scanner_mispicks", lambda d: d.scanner.mispick_events
+    ),
     # --- copy counters ---
-    _counter("copy_total_pages", "copy_total_pages", lambda d: d.copy.total_impressions),
-    _counter("copy_mono_pages", "copy_mono_pages", lambda d: d.copy.monochrome_impressions),
-    _counter("copy_color_pages", "copy_color_pages", lambda d: d.copy.color_impressions),
+    _counter(
+        "copy_total_pages", "copy_total_pages", lambda d: d.copy.total_impressions
+    ),
+    _counter(
+        "copy_mono_pages", "copy_mono_pages", lambda d: d.copy.monochrome_impressions
+    ),
+    _counter(
+        "copy_color_pages", "copy_color_pages", lambda d: d.copy.color_impressions
+    ),
     # --- diagnostics: firmware and the device event log ---
     HPPrinterSensorDescription(
         key="firmware_date",
@@ -101,9 +138,7 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         key="last_event_code",
         translation_key="last_event_code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data, _info: (
-            data.last_event.code if data.last_event else None
-        ),
+        value_fn=lambda data, _info: data.last_event.code if data.last_event else None,
         # The whole log is attached so a fault history is one click away.
         # Codes are dotted families: 10.x supply memory, 13.x paper jams,
         # 41.x media mismatch, 49.x firmware faults.
