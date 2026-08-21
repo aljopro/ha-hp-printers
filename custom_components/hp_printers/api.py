@@ -330,8 +330,19 @@ class LEDMClient:
             if code is None:
                 continue
             usage = usage_by_code.get(code)
-            life = _find(node, "ConsumableLifeState")
+
+            # ConsumableInfo carries the installed cartridge's fields as direct
+            # children AND a PreviousCartridgeData subtree describing the one
+            # that was removed. Five names appear in both -- notably
+            # SerialNumber and Date -- so the subtree is detached before the
+            # installed cartridge is read. Without this, lookups resolve by
+            # document order, which happens to be correct on this firmware and
+            # would silently report the wrong cartridge if that order changed.
             previous = _find(node, "PreviousCartridgeData")
+            if previous is not None:
+                node.remove(previous)
+
+            life = _find(node, "ConsumableLifeState")
             result[code] = Consumable(
                 label_code=code,
                 color_name=COLOR_NAMES.get(code),
@@ -363,6 +374,9 @@ class LEDMClient:
                 previous_engine_toner_remaining=_sentinel(
                     _int(previous, "EngineTonerRemaining")
                 ),
+                # Note this is NOT how a third-party cartridge is detected:
+                # clone chips report the genuine part number. Brand is what
+                # exposes that.
                 previous_part_number=_text(previous, "ProductNumber"),
                 previous_serial_number=_text(previous, "SerialNumber"),
             )
