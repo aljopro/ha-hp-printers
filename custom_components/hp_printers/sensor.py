@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import STATUS_OPTIONS
 from .coordinator import HPPrinterConfigEntry
-from .entity import HPConsumableEntity, HPPrinterEntity
+from .entity import HPConsumableEntity, HPPrinterEntity, HPSubunitEntity
 from .models import Consumable, PrinterData, ProductInfo
 
 PARALLEL_UPDATES = 0
@@ -32,6 +32,8 @@ class HPPrinterSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[PrinterData, ProductInfo], StateType | date]
     attrs_fn: Callable[[PrinterData], dict[str, Any]] | None = None
+    # When set, the entity is attached to a sub-device rather than the printer.
+    subunit: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,7 +43,12 @@ class HPConsumableSensorDescription(SensorEntityDescription):
     value_fn: Callable[[Consumable], StateType | date]
 
 
-def _counter(key: str, translation_key: str, getter: Callable[[PrinterData], Any]):
+def _counter(
+    key: str,
+    translation_key: str,
+    getter: Callable[[PrinterData], Any],
+    subunit: str | None = None,
+):
     """Build a monotonic page-counter description."""
     return HPPrinterSensorDescription(
         key=key,
@@ -49,7 +56,11 @@ def _counter(key: str, translation_key: str, getter: Callable[[PrinterData], Any
         native_unit_of_measurement=PAGES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data, _info: getter(data),
+        subunit=subunit,
     )
+
+
+SUBUNIT_LABELS = {"scanner": "Scanner", "copy": "Copier"}
 
 
 PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
@@ -97,28 +108,46 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         "printer_mispicks", "printer_mispicks", lambda d: d.printer.mispick_events
     ),
     # --- scanner counters ---
-    _counter("scanner_images", "scanner_images", lambda d: d.scanner.scan_images),
     _counter(
-        "scanner_adf_images", "scanner_adf_images", lambda d: d.scanner.adf_images
+        "scanner_images", "scanner_images", lambda d: d.scanner.scan_images, "scanner"
+    ),
+    _counter(
+        "scanner_adf_images",
+        "scanner_adf_images",
+        lambda d: d.scanner.adf_images,
+        "scanner",
     ),
     _counter(
         "scanner_flatbed_images",
         "scanner_flatbed_images",
         lambda d: d.scanner.flatbed_images,
+        "scanner",
     ),
-    _counter("scanner_jams", "scanner_jams", lambda d: d.scanner.jam_events),
+    _counter("scanner_jams", "scanner_jams", lambda d: d.scanner.jam_events, "scanner"),
     _counter(
-        "scanner_mispicks", "scanner_mispicks", lambda d: d.scanner.mispick_events
+        "scanner_mispicks",
+        "scanner_mispicks",
+        lambda d: d.scanner.mispick_events,
+        "scanner",
     ),
     # --- copy counters ---
     _counter(
-        "copy_total_pages", "copy_total_pages", lambda d: d.copy.total_impressions
+        "copy_total_pages",
+        "copy_total_pages",
+        lambda d: d.copy.total_impressions,
+        "copy",
     ),
     _counter(
-        "copy_mono_pages", "copy_mono_pages", lambda d: d.copy.monochrome_impressions
+        "copy_mono_pages",
+        "copy_mono_pages",
+        lambda d: d.copy.monochrome_impressions,
+        "copy",
     ),
     _counter(
-        "copy_color_pages", "copy_color_pages", lambda d: d.copy.color_impressions
+        "copy_color_pages",
+        "copy_color_pages",
+        lambda d: d.copy.color_impressions,
+        "copy",
     ),
     # --- diagnostics: firmware and the device event log ---
     HPPrinterSensorDescription(
@@ -307,7 +336,14 @@ async def async_setup_entry(
     info = coordinator.product_info
 
     entities: list[SensorEntity] = [
-        HPPrinterSensor(coordinator, description)
+        HPSubunitSensor(
+            coordinator,
+            description,
+            description.subunit,
+            SUBUNIT_LABELS[description.subunit],
+        )
+        if description.subunit
+        else HPPrinterSensor(coordinator, description)
         for description in PRINTER_SENSORS
         # Not every model populates every subunit -- a printer with no ADF or
         # no fax simply omits those counters. Skip them rather than creating
@@ -343,6 +379,19 @@ class HPPrinterSensor(HPPrinterEntity, SensorEntity):
         if self.entity_description.attrs_fn is None:
             return None
         return self.entity_description.attrs_fn(self.coordinator.data)
+
+
+class HPSubunitSensor(HPSubunitEntity, SensorEntity):
+    """A sensor belonging to a scanner or copier sub-device."""
+
+    entity_description: HPPrinterSensorDescription
+
+    @property
+    def native_value(self) -> StateType | date:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(
+            self.coordinator.data, self.coordinator.product_info
+        )
 
 
 class HPConsumableSensor(HPConsumableEntity, SensorEntity):

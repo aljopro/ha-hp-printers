@@ -40,6 +40,40 @@ class HPPrinterEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
         )
 
 
+class HPSubunitEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
+    """An entity belonging to one functional unit of a multifunction device.
+
+    A scanner and a copier are distinct units of an MFP with their own
+    counters, so they are modelled as sub-devices of the printer. Printing
+    counters stay on the printer itself, since those are its primary metrics.
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HPPrinterDataUpdateCoordinator,
+        description: EntityDescription,
+        subunit: str,
+        subunit_label: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self.entity_description = description
+
+        info = coordinator.product_info
+        printer_serial = info.serial_number or coordinator.config_entry.entry_id
+
+        self._attr_unique_id = f"{printer_serial}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{printer_serial}_{subunit}")},
+            via_device=(DOMAIN, printer_serial),
+            manufacturer=MANUFACTURER,
+            model=info.make_and_model,
+            name=f"{coordinator.config_entry.title} {subunit_label}",
+        )
+
+
 class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
     """An entity belonging to a single cartridge.
 
