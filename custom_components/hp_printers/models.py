@@ -54,15 +54,18 @@ class Consumable:
     counterfeit_refills: int | None = None
     genuine_refills: int | None = None
     family_name: str | None = None
-    # The engine's own estimate, independent of the cartridge chip -- useful
-    # as a cross-check when a third-party chip's claim is in doubt.
-    engine_toner_remaining: float | None = None
     # Finer-grained than ConsumablePercentageLevelRemaining, which is rounded.
+    # The device reports a negative sentinel when it does not know.
     raw_level_percent: float | None = None
-    # The imaging drum and developer unit wear independently of toner and are
-    # replaced separately; on some models they are the first thing to go.
-    drum_life_percent: float | None = None
-    developer_life_percent: float | None = None
+    # Wear counters for the cartridge that was REMOVED from this slot, not the
+    # one currently installed. ConsumableConfigCap places all three under
+    # ConsumableInfo/PreviousCartridgeData. They are declared as plain
+    # integers rather than percentages, and use 127 as an unknown sentinel.
+    previous_drum_life: int | None = None
+    previous_developer_life: int | None = None
+    previous_engine_toner_remaining: int | None = None
+    previous_part_number: str | None = None
+    previous_serial_number: str | None = None
     # The manufacturer's own low threshold, so automations need not guess.
     low_threshold_percent: float | None = None
     measured_state: str | None = None

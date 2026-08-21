@@ -188,15 +188,6 @@
       "cartridge_warranty_expires_at": {
         "name": "Warranty expires"
       },
-      "cartridge_drum_life": {
-        "name": "Drum life"
-      },
-      "cartridge_developer_life": {
-        "name": "Developer life"
-      },
-      "cartridge_engine_level": {
-        "name": "Level (engine estimate)"
-      },
       "cartridge_raw_level": {
         "name": "Level (raw)"
       },
@@ -211,6 +202,15 @@
       },
       "power_save_timeout": {
         "name": "Power save timeout"
+      },
+      "cartridge_previous_developer_life": {
+        "name": "Previous cartridge developer life"
+      },
+      "cartridge_previous_drum_life": {
+        "name": "Previous cartridge drum life"
+      },
+      "cartridge_previous_part_number": {
+        "name": "Previous cartridge part number"
       }
     },
     "binary_sensor": {

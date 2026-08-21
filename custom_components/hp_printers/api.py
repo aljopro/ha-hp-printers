@@ -135,6 +135,24 @@ def _date(root: Element | None, *names: str) -> datetime | None:
     return None
 
 
+def _percent(value: float | None) -> float | None:
+    """Discard the device's out-of-range sentinel for an unknown percentage.
+
+    ProductUsageCap declares the raw level with min=-128, which is how the
+    device says it does not know rather than a real reading.
+    """
+    if value is None or not 0 <= value <= 100:
+        return None
+    return value
+
+
+def _sentinel(value: int | None) -> int | None:
+    """Discard 127, which these wear counters use to mean unknown."""
+    if value is None or value == 127:
+        return None
+    return value
+
+
 def _enabled(value: str | None) -> bool | None:
     """Interpret HP's enabled/disabled and set/notSet string flags."""
     if value is None:
@@ -313,6 +331,7 @@ class LEDMClient:
                 continue
             usage = usage_by_code.get(code)
             life = _find(node, "ConsumableLifeState")
+            previous = _find(node, "PreviousCartridgeData")
             result[code] = Consumable(
                 label_code=code,
                 color_name=COLOR_NAMES.get(code),
@@ -334,14 +353,18 @@ class LEDMClient:
                 ),
                 genuine_refills=_int(usage, "RefilledCount", "GenuineRefilledCount"),
                 family_name=_text(node, "ConsumableFamilyName"),
-                engine_toner_remaining=_float(node, "EngineTonerRemaining"),
-                raw_level_percent=_float(
-                    usage, "ConsumableRawPercentageLevelRemaining"
+                raw_level_percent=_percent(
+                    _float(usage, "ConsumableRawPercentageLevelRemaining")
                 ),
-                drum_life_percent=_float(node, "DrumLife"),
-                developer_life_percent=_float(node, "DeveloperLife"),
                 low_threshold_percent=_float(node, "ConsumableLowThreshold"),
                 measured_state=_text(node, "MeasuredQuantityState"),
+                previous_drum_life=_sentinel(_int(previous, "DrumLife")),
+                previous_developer_life=_sentinel(_int(previous, "DeveloperLife")),
+                previous_engine_toner_remaining=_sentinel(
+                    _int(previous, "EngineTonerRemaining")
+                ),
+                previous_part_number=_text(previous, "ProductNumber"),
+                previous_serial_number=_text(previous, "SerialNumber"),
             )
         return result
 

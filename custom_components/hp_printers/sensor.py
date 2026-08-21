@@ -220,30 +220,6 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
         value_fn=lambda c: c.total_impressions,
     ),
     HPConsumableSensorDescription(
-        key="drum_life",
-        translation_key="cartridge_drum_life",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c.drum_life_percent,
-    ),
-    HPConsumableSensorDescription(
-        key="developer_life",
-        translation_key="cartridge_developer_life",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda c: c.developer_life_percent,
-    ),
-    HPConsumableSensorDescription(
-        key="engine_level",
-        translation_key="cartridge_engine_level",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        # The engine's own estimate. Where it diverges from the cartridge's
-        # reported level, a third-party chip is the likely explanation.
-        value_fn=lambda c: c.engine_toner_remaining,
-    ),
-    HPConsumableSensorDescription(
         key="raw_level",
         translation_key="cartridge_raw_level",
         native_unit_of_measurement=PERCENTAGE,
@@ -261,6 +237,31 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
         # The manufacturer's own low point, so a low-toner automation can use
         # a real threshold rather than a guessed one.
         value_fn=lambda c: c.low_threshold_percent,
+    ),
+    # The following describe the cartridge previously REMOVED from this slot,
+    # not the one installed. They are useful for judging how worn a cartridge
+    # was when it was swapped, but they must never be read as current state,
+    # so they are named explicitly and disabled by default.
+    HPConsumableSensorDescription(
+        key="previous_developer_life",
+        translation_key="cartridge_previous_developer_life",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.previous_developer_life,
+    ),
+    HPConsumableSensorDescription(
+        key="previous_drum_life",
+        translation_key="cartridge_previous_drum_life",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.previous_drum_life,
+    ),
+    HPConsumableSensorDescription(
+        key="previous_part_number",
+        translation_key="cartridge_previous_part_number",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.previous_part_number,
     ),
     HPConsumableSensorDescription(
         key="brand",
