@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Add an HP printer",
-        "description": "Enter the printer's address. Give it a name to control what its entities are called — leave it blank to use the model name.",
+        "description": "Enter the printer's address. Give it a name to control what its entities are called \u2014 leave it blank to use the model name.",
         "data": {
           "host": "Host or IP address",
           "name": "Name"
@@ -41,6 +41,16 @@
             }
           }
         }
+      },
+      "zeroconf_confirm": {
+        "title": "HP printer found",
+        "description": "Found {model} at {host}. Give it a name to control what its entities are called, or leave it blank to use the model name.",
+        "data": {
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Used for the device and all of its entity IDs. Short names work best."
+        }
       }
     },
     "error": {
@@ -49,7 +59,8 @@
     },
     "abort": {
       "already_configured": "This printer is already set up.",
-      "serial_mismatch": "That address belongs to a different printer than the one this entry was created for."
+      "serial_mismatch": "That address belongs to a different printer than the one this entry was created for.",
+      "cannot_connect": "Found a printer, but could not read from it. It may be asleep, or it may not support the management interface this integration uses."
     }
   },
   "options": {
@@ -96,40 +107,104 @@
           "unknown": "Unknown"
         }
       },
-      "printer_total_pages": { "name": "Pages printed" },
-      "printer_mono_pages": { "name": "Black and white pages" },
-      "printer_color_pages": { "name": "Color pages" },
-      "printer_simplex_sheets": { "name": "Single-sided sheets" },
-      "printer_duplex_sheets": { "name": "Double-sided sheets" },
-      "printer_jams": { "name": "Paper jams" },
-      "printer_mispicks": { "name": "Mispicks" },
-      "scanner_images": { "name": "Pages scanned" },
-      "scanner_adf_images": { "name": "Pages scanned from feeder" },
-      "scanner_flatbed_images": { "name": "Pages scanned from glass" },
-      "scanner_jams": { "name": "Scanner jams" },
-      "scanner_mispicks": { "name": "Scanner mispicks" },
-      "copy_total_pages": { "name": "Pages copied" },
-      "copy_mono_pages": { "name": "Black and white copies" },
-      "copy_color_pages": { "name": "Color copies" },
-      "firmware_date": { "name": "Firmware date" },
-      "language_pack_version": { "name": "Language pack version" },
-      "last_event_code": { "name": "Last event code" },
-      "last_event_page": { "name": "Last event at page" },
-      "last_job_source": { "name": "Last job source" },
-      "cartridge_level": { "name": "Level" },
-      "cartridge_pages_remaining": { "name": "Pages remaining" },
-      "cartridge_pages_printed": { "name": "Pages printed" },
-      "cartridge_brand": { "name": "Brand" },
-      "cartridge_part_number": { "name": "Part number" },
-      "cartridge_manufactured_at": { "name": "Manufactured" },
-      "cartridge_warranty_expires_at": { "name": "Warranty expires" }
+      "printer_total_pages": {
+        "name": "Pages printed"
+      },
+      "printer_mono_pages": {
+        "name": "Black and white pages"
+      },
+      "printer_color_pages": {
+        "name": "Color pages"
+      },
+      "printer_simplex_sheets": {
+        "name": "Single-sided sheets"
+      },
+      "printer_duplex_sheets": {
+        "name": "Double-sided sheets"
+      },
+      "printer_jams": {
+        "name": "Paper jams"
+      },
+      "printer_mispicks": {
+        "name": "Mispicks"
+      },
+      "scanner_images": {
+        "name": "Pages scanned"
+      },
+      "scanner_adf_images": {
+        "name": "Pages scanned from feeder"
+      },
+      "scanner_flatbed_images": {
+        "name": "Pages scanned from glass"
+      },
+      "scanner_jams": {
+        "name": "Scanner jams"
+      },
+      "scanner_mispicks": {
+        "name": "Scanner mispicks"
+      },
+      "copy_total_pages": {
+        "name": "Pages copied"
+      },
+      "copy_mono_pages": {
+        "name": "Black and white copies"
+      },
+      "copy_color_pages": {
+        "name": "Color copies"
+      },
+      "firmware_date": {
+        "name": "Firmware date"
+      },
+      "language_pack_version": {
+        "name": "Language pack version"
+      },
+      "last_event_code": {
+        "name": "Last event code"
+      },
+      "last_event_page": {
+        "name": "Last event at page"
+      },
+      "last_job_source": {
+        "name": "Last job source"
+      },
+      "cartridge_level": {
+        "name": "Level"
+      },
+      "cartridge_pages_remaining": {
+        "name": "Pages remaining"
+      },
+      "cartridge_pages_printed": {
+        "name": "Pages printed"
+      },
+      "cartridge_brand": {
+        "name": "Brand"
+      },
+      "cartridge_part_number": {
+        "name": "Part number"
+      },
+      "cartridge_manufactured_at": {
+        "name": "Manufactured"
+      },
+      "cartridge_warranty_expires_at": {
+        "name": "Warranty expires"
+      }
     },
     "binary_sensor": {
-      "firmware_fault": { "name": "Firmware fault recorded" },
-      "genuine_supplies_only": { "name": "Genuine supplies enforced" },
-      "admin_password_set": { "name": "Admin password set" },
-      "cartridge_problem": { "name": "Problem" },
-      "cartridge_genuine": { "name": "Genuine" }
+      "firmware_fault": {
+        "name": "Firmware fault recorded"
+      },
+      "genuine_supplies_only": {
+        "name": "Genuine supplies enforced"
+      },
+      "admin_password_set": {
+        "name": "Admin password set"
+      },
+      "cartridge_problem": {
+        "name": "Problem"
+      },
+      "cartridge_genuine": {
+        "name": "Genuine"
+      }
     }
   }
 }

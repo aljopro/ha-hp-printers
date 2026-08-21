@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
     TextSelector,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import HPPrinterConnectionError, HPPrinterError, LEDMClient
 from .const import (
@@ -87,6 +88,11 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._discovered: dict[str, Any] = {}
+        self._discovered_model: str = "HP Printer"
+
     async def _async_probe(
         self, data: dict[str, Any]
     ) -> tuple[dict[str, str], str | None, str | None]:
@@ -131,6 +137,59 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_SCHEMA, user_input
             ),
             errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a printer announcing itself over mDNS.
+
+        The announced port is the IPP print port; LEDM is served by the
+        embedded web server on the usual HTTP port, so the announced port is
+        deliberately ignored.
+
+        The announced hostname is preferred over the resolved address. HP
+        derives it from the MAC, so it survives DHCP changes -- and because
+        the entry is keyed on serial number, rediscovery at a new address
+        updates the existing entry rather than creating a second one.
+        """
+        host = (discovery_info.hostname or discovery_info.host).rstrip(".")
+
+        data = {
+            CONF_HOST: host,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: DEFAULT_SSL,
+        }
+        errors, serial, model = await self._async_probe(data)
+        if errors or not serial:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(serial)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        self._discovered = data
+        self._discovered_model = model or "HP Printer"
+        self.context["title_placeholders"] = {"name": self._discovered_model}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user name a discovered printer before adding it."""
+        if user_input is not None:
+            title = (user_input.get(CONF_NAME) or self._discovered_model).strip()
+            return self.async_create_entry(title=title, data=self._discovered)
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Optional(CONF_NAME): TextSelector()}),
+                {CONF_NAME: self._discovered_model},
+            ),
+            description_placeholders={
+                "model": self._discovered_model,
+                "host": self._discovered[CONF_HOST],
+            },
         )
 
     async def async_step_reconfigure(
