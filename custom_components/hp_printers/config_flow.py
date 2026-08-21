@@ -25,6 +25,7 @@ from .api import HPPrinterConnectionError, HPPrinterError, LEDMClient
 from .const import (
     CONF_SCAN_INTERVAL_SECONDS,
     DEFAULT_PORT,
+    DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DOMAIN,
@@ -32,6 +33,7 @@ from .const import (
     MIN_SCAN_INTERVAL_SECONDS,
 )
 from .coordinator import HPPrinterConfigEntry
+from .helpers import printer_ssl_context
 
 SECTION_ADVANCED = "advanced_settings"
 
@@ -59,11 +61,24 @@ STEP_USER_SCHEMA = vol.Schema(
 
 
 def _flatten(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Merge the advanced section into flat entry data."""
+    """Merge the advanced section into flat entry data.
+
+    Ticking HTTPS while leaving the port at its plain-HTTP default is almost
+    always a mistake rather than an intent, so the port follows to 443. A port
+    the user actually chose is left alone.
+    """
     data = {k: v for k, v in user_input.items() if k != SECTION_ADVANCED}
     advanced = user_input.get(SECTION_ADVANCED, {})
-    data[CONF_PORT] = int(advanced.get(CONF_PORT, DEFAULT_PORT))
-    data[CONF_SSL] = bool(advanced.get(CONF_SSL, DEFAULT_SSL))
+
+    use_ssl = bool(advanced.get(CONF_SSL, DEFAULT_SSL))
+    port = int(advanced.get(CONF_PORT, DEFAULT_PORT))
+    if use_ssl and port == DEFAULT_PORT:
+        port = DEFAULT_PORT_SSL
+    elif not use_ssl and port == DEFAULT_PORT_SSL:
+        port = DEFAULT_PORT
+
+    data[CONF_PORT] = port
+    data[CONF_SSL] = use_ssl
     return data
 
 
@@ -81,6 +96,7 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
             data[CONF_HOST],
             data[CONF_PORT],
             data[CONF_SSL],
+            printer_ssl_context(),
         )
         try:
             info = await client.async_validate()

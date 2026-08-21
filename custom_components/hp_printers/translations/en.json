@@ -20,7 +20,7 @@
               "ssl": "Use HTTPS"
             },
             "data_description": {
-              "port": "The embedded web server port. Usually 80, or 443 with HTTPS.",
+              "port": "The embedded web server port. Leave at 80 and it will follow to 443 automatically if you turn on HTTPS.",
               "ssl": "Printers use a self-signed certificate, which is not verified."
             }
           }

@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import HPPrinterConfigEntry, HPPrinterDataUpdateCoordinator
+from .helpers import printer_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +26,12 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HPPrinterConfigEntry) -> bool:
     """Set up HP Printers from a config entry."""
-    # Printers serve their own self-signed certificate, so verification is
-    # disabled at the request level in the client rather than here.
-    session = async_get_clientsession(hass, verify_ssl=False)
     client = LEDMClient(
-        session,
+        async_get_clientsession(hass, verify_ssl=False),
         entry.data[CONF_HOST],
         entry.data.get(CONF_PORT, DEFAULT_PORT),
         entry.data.get(CONF_SSL, DEFAULT_SSL),
+        printer_ssl_context(),
     )
 
     try:

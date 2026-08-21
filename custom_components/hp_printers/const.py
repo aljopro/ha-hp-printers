@@ -12,6 +12,7 @@ MANUFACTURER: Final = "HP"
 # deliberately do not poll as fast as the device would allow.
 DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=60)
 DEFAULT_PORT: Final = 80
+DEFAULT_PORT_SSL: Final = 443
 DEFAULT_SSL: Final = False
 
 CONF_SCAN_INTERVAL_SECONDS: Final = "scan_interval_seconds"

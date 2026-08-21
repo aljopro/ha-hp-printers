@@ -10,6 +10,7 @@ available resources, and each resource is exposed as a paired
 import asyncio
 from datetime import datetime
 import logging
+import ssl
 from typing import Any
 from xml.etree.ElementTree import Element
 
@@ -145,13 +146,27 @@ class LEDMClient:
     """Read-only client for a printer's LEDM endpoints."""
 
     def __init__(
-        self, session: ClientSession, host: str, port: int, use_ssl: bool
+        self,
+        session: ClientSession,
+        host: str,
+        port: int,
+        use_ssl: bool,
+        ssl_context: ssl.SSLContext | None = None,
     ) -> None:
-        """Initialize the client."""
+        """Initialize the client.
+
+        Printers serve a self-signed certificate and, at least on the models
+        seen so far, only offer legacy static-RSA cipher suites such as
+        AES128-GCM-SHA256. Python's default cipher list drops those, so a
+        plain no-verify context is not enough -- the handshake fails before
+        certificate checking is ever reached. Callers should pass a context
+        built from a permissive cipher list.
+        """
         self._session = session
         self._host = host
         self._port = port
         self._ssl = use_ssl
+        self._ssl_context: ssl.SSLContext | bool = ssl_context or False
 
     @property
     def host(self) -> str:
@@ -169,7 +184,7 @@ class LEDMClient:
         url = f"{self.base_url}{endpoint}"
         try:
             async with self._session.get(
-                url, timeout=REQUEST_TIMEOUT, ssl=False
+                url, timeout=REQUEST_TIMEOUT, ssl=self._ssl_context
             ) as response:
                 response.raise_for_status()
                 body = await response.text()
