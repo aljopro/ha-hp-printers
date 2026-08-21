@@ -127,6 +127,23 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda _data, info: info.firmware_date,
     ),
+    _counter(
+        "genuine_color_pages",
+        "genuine_color_pages",
+        lambda d: d.genuine_color_impressions,
+    ),
+    _counter(
+        "genuine_mono_pages",
+        "genuine_mono_pages",
+        lambda d: d.genuine_mono_impressions,
+    ),
+    HPPrinterSensorDescription(
+        key="power_save_timeout",
+        translation_key="power_save_timeout",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda _data, info: info.power_save_timeout,
+    ),
     HPPrinterSensorDescription(
         key="language_pack_version",
         translation_key="language_pack_version",
@@ -201,6 +218,49 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
         native_unit_of_measurement=PAGES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda c: c.total_impressions,
+    ),
+    HPConsumableSensorDescription(
+        key="drum_life",
+        translation_key="cartridge_drum_life",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda c: c.drum_life_percent,
+    ),
+    HPConsumableSensorDescription(
+        key="developer_life",
+        translation_key="cartridge_developer_life",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda c: c.developer_life_percent,
+    ),
+    HPConsumableSensorDescription(
+        key="engine_level",
+        translation_key="cartridge_engine_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        # The engine's own estimate. Where it diverges from the cartridge's
+        # reported level, a third-party chip is the likely explanation.
+        value_fn=lambda c: c.engine_toner_remaining,
+    ),
+    HPConsumableSensorDescription(
+        key="raw_level",
+        translation_key="cartridge_raw_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.raw_level_percent,
+    ),
+    HPConsumableSensorDescription(
+        key="low_threshold",
+        translation_key="cartridge_low_threshold",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        # The manufacturer's own low point, so a low-toner automation can use
+        # a real threshold rather than a guessed one.
+        value_fn=lambda c: c.low_threshold_percent,
     ),
     HPConsumableSensorDescription(
         key="brand",

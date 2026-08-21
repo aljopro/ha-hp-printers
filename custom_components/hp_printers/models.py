@@ -26,6 +26,10 @@ class ProductInfo:
     # only -- LEDM reads stay open either way.
     password_set: bool | None = None
     duplex_unit: str | None = None
+    friendly_name: str | None = None
+    power_save: str | None = None
+    power_save_timeout: str | None = None
+    shutdown_delay: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +53,19 @@ class Consumable:
     warranty_expires_at: datetime | None = None
     counterfeit_refills: int | None = None
     genuine_refills: int | None = None
+    family_name: str | None = None
+    # The engine's own estimate, independent of the cartridge chip -- useful
+    # as a cross-check when a third-party chip's claim is in doubt.
+    engine_toner_remaining: float | None = None
+    # Finer-grained than ConsumablePercentageLevelRemaining, which is rounded.
+    raw_level_percent: float | None = None
+    # The imaging drum and developer unit wear independently of toner and are
+    # replaced separately; on some models they are the first thing to go.
+    drum_life_percent: float | None = None
+    developer_life_percent: float | None = None
+    # The manufacturer's own low threshold, so automations need not guess.
+    low_threshold_percent: float | None = None
+    measured_state: str | None = None
 
     @property
     def is_genuine(self) -> bool | None:
@@ -107,6 +124,8 @@ class PrinterData:
     copy: SubunitUsage = field(default_factory=SubunitUsage)
     events: list[EventLogEntry] = field(default_factory=list)
     jobs: list[JobEntry] = field(default_factory=list)
+    genuine_color_impressions: int | None = None
+    genuine_mono_impressions: int | None = None
     assert_text: str | None = None
     genuine_supplies_only: bool | None = None
 

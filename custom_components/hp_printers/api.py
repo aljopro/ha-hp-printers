@@ -220,6 +220,12 @@ class LEDMClient:
             language_pack_version=_text(info, "LanguagePackVersion", "Revision"),
             password_set=_enabled(_text(info, "PasswordStatus")),
             duplex_unit=_text(info, "DuplexUnit"),
+            # These live under ProductSettings rather than ProductInformation,
+            # so they are read from the document root.
+            friendly_name=_text(root, "FriendlyName"),
+            power_save=_text(info, "PowerSave"),
+            power_save_timeout=_text(root, "PowerSaveTimeout"),
+            shutdown_delay=_text(root, "ShutDownDelay"),
         )
 
     async def async_get_data(self) -> PrinterData:
@@ -252,6 +258,8 @@ class LEDMClient:
             genuine_supplies_only=_enabled(
                 _text(consumable_doc, "GenuineHPSuppliesOnly")
             ),
+            genuine_color_impressions=_int(usage_doc, "OriginalHPColorImpressions"),
+            genuine_mono_impressions=_int(usage_doc, "OriginalHPMonochromeImpressions"),
         )
 
     def _parse_subunit(self, usage_doc: Element, subunit: str) -> SubunitUsage:
@@ -325,6 +333,15 @@ class LEDMClient:
                     usage, "RefilledCount", "CounterfeitRefilledCount"
                 ),
                 genuine_refills=_int(usage, "RefilledCount", "GenuineRefilledCount"),
+                family_name=_text(node, "ConsumableFamilyName"),
+                engine_toner_remaining=_float(node, "EngineTonerRemaining"),
+                raw_level_percent=_float(
+                    usage, "ConsumableRawPercentageLevelRemaining"
+                ),
+                drum_life_percent=_float(node, "DrumLife"),
+                developer_life_percent=_float(node, "DeveloperLife"),
+                low_threshold_percent=_float(node, "ConsumableLowThreshold"),
+                measured_state=_text(node, "MeasuredQuantityState"),
             )
         return result
 

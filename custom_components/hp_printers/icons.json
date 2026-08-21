@@ -1,40 +1,128 @@
 {
   "entity": {
     "sensor": {
-      "status": { "default": "mdi:printer" },
-      "printer_total_pages": { "default": "mdi:file-document-multiple" },
-      "printer_mono_pages": { "default": "mdi:file-document" },
-      "printer_color_pages": { "default": "mdi:file-document-edit" },
-      "printer_simplex_sheets": { "default": "mdi:file-document-outline" },
-      "printer_duplex_sheets": { "default": "mdi:file-document-multiple-outline" },
-      "printer_jams": { "default": "mdi:file-document-remove" },
-      "printer_mispicks": { "default": "mdi:file-document-minus" },
-      "scanner_images": { "default": "mdi:scanner" },
-      "scanner_adf_images": { "default": "mdi:tray-arrow-down" },
-      "scanner_flatbed_images": { "default": "mdi:card-scan-outline" },
-      "scanner_jams": { "default": "mdi:scanner-off" },
-      "scanner_mispicks": { "default": "mdi:tray-remove" },
-      "copy_total_pages": { "default": "mdi:content-copy" },
-      "copy_mono_pages": { "default": "mdi:content-copy" },
-      "copy_color_pages": { "default": "mdi:content-duplicate" },
-      "firmware_date": { "default": "mdi:chip" },
-      "language_pack_version": { "default": "mdi:translate" },
-      "last_event_code": { "default": "mdi:alert-circle-outline" },
-      "last_event_page": { "default": "mdi:counter" },
-      "last_job_source": { "default": "mdi:printer-outline" },
-      "cartridge_level": { "default": "mdi:water-percent" },
-      "cartridge_pages_remaining": { "default": "mdi:file-clock-outline" },
-      "cartridge_pages_printed": { "default": "mdi:file-check-outline" },
-      "cartridge_brand": { "default": "mdi:tag-outline" },
-      "cartridge_part_number": { "default": "mdi:barcode" },
-      "cartridge_manufactured_at": { "default": "mdi:calendar-start" },
-      "cartridge_warranty_expires_at": { "default": "mdi:calendar-end" }
+      "status": {
+        "default": "mdi:printer"
+      },
+      "printer_total_pages": {
+        "default": "mdi:file-document-multiple"
+      },
+      "printer_mono_pages": {
+        "default": "mdi:file-document"
+      },
+      "printer_color_pages": {
+        "default": "mdi:file-document-edit"
+      },
+      "printer_simplex_sheets": {
+        "default": "mdi:file-document-outline"
+      },
+      "printer_duplex_sheets": {
+        "default": "mdi:file-document-multiple-outline"
+      },
+      "printer_jams": {
+        "default": "mdi:file-document-remove"
+      },
+      "printer_mispicks": {
+        "default": "mdi:file-document-minus"
+      },
+      "scanner_images": {
+        "default": "mdi:scanner"
+      },
+      "scanner_adf_images": {
+        "default": "mdi:tray-arrow-down"
+      },
+      "scanner_flatbed_images": {
+        "default": "mdi:card-scan-outline"
+      },
+      "scanner_jams": {
+        "default": "mdi:scanner-off"
+      },
+      "scanner_mispicks": {
+        "default": "mdi:tray-remove"
+      },
+      "copy_total_pages": {
+        "default": "mdi:content-copy"
+      },
+      "copy_mono_pages": {
+        "default": "mdi:content-copy"
+      },
+      "copy_color_pages": {
+        "default": "mdi:content-duplicate"
+      },
+      "firmware_date": {
+        "default": "mdi:chip"
+      },
+      "language_pack_version": {
+        "default": "mdi:translate"
+      },
+      "last_event_code": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "last_event_page": {
+        "default": "mdi:counter"
+      },
+      "last_job_source": {
+        "default": "mdi:printer-outline"
+      },
+      "cartridge_level": {
+        "default": "mdi:water-percent"
+      },
+      "cartridge_pages_remaining": {
+        "default": "mdi:file-clock-outline"
+      },
+      "cartridge_pages_printed": {
+        "default": "mdi:file-check-outline"
+      },
+      "cartridge_brand": {
+        "default": "mdi:tag-outline"
+      },
+      "cartridge_part_number": {
+        "default": "mdi:barcode"
+      },
+      "cartridge_manufactured_at": {
+        "default": "mdi:calendar-start"
+      },
+      "cartridge_warranty_expires_at": {
+        "default": "mdi:calendar-end"
+      },
+      "cartridge_drum_life": {
+        "default": "mdi:circle-slice-8"
+      },
+      "cartridge_developer_life": {
+        "default": "mdi:cog-outline"
+      },
+      "cartridge_engine_level": {
+        "default": "mdi:gauge"
+      },
+      "cartridge_raw_level": {
+        "default": "mdi:gauge-low"
+      },
+      "cartridge_low_threshold": {
+        "default": "mdi:alert-outline"
+      },
+      "genuine_color_pages": {
+        "default": "mdi:check-decagram-outline"
+      },
+      "genuine_mono_pages": {
+        "default": "mdi:check-decagram-outline"
+      },
+      "power_save_timeout": {
+        "default": "mdi:sleep"
+      }
     },
     "binary_sensor": {
-      "firmware_fault": { "default": "mdi:bug-outline" },
-      "genuine_supplies_only": { "default": "mdi:shield-lock-outline" },
-      "admin_password_set": { "default": "mdi:form-textbox-password" },
-      "cartridge_genuine": { "default": "mdi:check-decagram-outline" }
+      "firmware_fault": {
+        "default": "mdi:bug-outline"
+      },
+      "genuine_supplies_only": {
+        "default": "mdi:shield-lock-outline"
+      },
+      "admin_password_set": {
+        "default": "mdi:form-textbox-password"
+      },
+      "cartridge_genuine": {
+        "default": "mdi:check-decagram-outline"
+      }
     }
   }
 }

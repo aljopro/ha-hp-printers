@@ -187,6 +187,30 @@
       },
       "cartridge_warranty_expires_at": {
         "name": "Warranty expires"
+      },
+      "cartridge_drum_life": {
+        "name": "Drum life"
+      },
+      "cartridge_developer_life": {
+        "name": "Developer life"
+      },
+      "cartridge_engine_level": {
+        "name": "Level (engine estimate)"
+      },
+      "cartridge_raw_level": {
+        "name": "Level (raw)"
+      },
+      "cartridge_low_threshold": {
+        "name": "Low threshold"
+      },
+      "genuine_color_pages": {
+        "name": "Color pages on genuine supplies"
+      },
+      "genuine_mono_pages": {
+        "name": "Black and white pages on genuine supplies"
+      },
+      "power_save_timeout": {
+        "name": "Power save timeout"
       }
     },
     "binary_sensor": {
