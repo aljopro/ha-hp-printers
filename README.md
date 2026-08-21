@@ -76,6 +76,7 @@ All access is read-only (`GET`). This integration never writes to your printer.
 
 MIT
 
-The integration icon is derived from the `printer` glyph in
+The integration icon is original artwork. `brand-icon-mdi.svg` is an unused
+alternative derived from the `printer` glyph in
 [Material Design Icons](https://pictogrammers.com/library/mdi/) by the
 Pictogrammers group, used under the Apache License 2.0.
