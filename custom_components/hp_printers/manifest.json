@@ -19,15 +19,11 @@
   "zeroconf": [
     {
       "type": "_ipp._tcp.local.",
-      "properties": {
-        "usb_MFG": "HP*"
-      }
+      "name": "hp*"
     },
     {
       "type": "_ipps._tcp.local.",
-      "properties": {
-        "usb_MFG": "HP*"
-      }
+      "name": "hp*"
     }
   ]
 }
