@@ -75,3 +75,7 @@ All access is read-only (`GET`). This integration never writes to your printer.
 ## License
 
 MIT
+
+The integration icon is derived from the `printer` glyph in
+[Material Design Icons](https://pictogrammers.com/library/mdi/) by the
+Pictogrammers group, used under the Apache License 2.0.
