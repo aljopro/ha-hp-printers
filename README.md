@@ -37,7 +37,7 @@ Then *Settings → Devices & Services → Add Integration → HP Printers*.
 
 | Field | Notes |
 |---|---|
-| **Host** | The printer's address. A DHCP reservation is good practice, though entries are keyed on serial number so an address change will not orphan your entities. |
+| **Host** | Prefer the printer's mDNS name over its IP — HP sets one from the MAC, such as `NPI2E7F3D.local` (you'll find it on the printer's Network Summary page, or in the TLS certificate's common name). It resolves to a MAC-derived IPv6 address that cannot change on a lease renewal, so no DHCP reservation is needed. An IP works too; entries are keyed on serial number, so an address change will not orphan your entities either way. |
 | **Name** | Optional. Drives the device name and every entity ID. Leave blank to use the model name. |
 | **Port / HTTPS** | Under *Advanced settings*. Defaults to port 80. Printers serve a self-signed certificate, which is not verified. |
 

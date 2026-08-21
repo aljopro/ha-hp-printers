@@ -9,7 +9,7 @@
           "name": "Name"
         },
         "data_description": {
-          "host": "The printer's address on your network, for example 192.168.1.50.",
+          "host": "Prefer the printer's mDNS name, such as NPI2E7F3D.local, which survives address changes. An IP address works too.",
           "name": "Used for the device and all of its entity IDs. Short names work best."
         },
         "sections": {
