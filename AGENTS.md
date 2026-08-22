@@ -158,6 +158,7 @@ Two rules the anonymizer has already been bitten by:
 
 - **Versioning is Home Assistant's own: `YEAR.MONTH.RELEASE`** -- `2026.8.0`, `2026.8.1`, then `2026.9.0` when the month turns over. The month is not zero-padded and `RELEASE` counts from 0 within each month. `tests/test_manifest.py` pins the format.
 - **Releases are automatic.** `.github/workflows/release.yaml` runs after CI succeeds on `main`, computes the next calendar version, writes it into `manifest.json`, commits, tags and publishes. Nothing to bump by hand.
+- Release notes are built from commit subjects, not GitHub's `--generate-notes`, which lists merged pull requests and therefore lists nothing here. **Commit subjects are the changelog** -- write them for someone reading the release page.
 - A release is cut only when something under `custom_components/` changed since the last release. Documentation, CI and test-only commits ship nothing to a user and get no version.
 - The release commit carries `[skip ci]`, which is what stops it triggering CI and looping back into this workflow. Do not remove it.
 - The next version is computed from **both** existing releases and existing tags, and the job fails if the computed tag already exists. Deleting a release leaves its tag behind, and reusing that number would silently attach the new release to the old tag's commit.

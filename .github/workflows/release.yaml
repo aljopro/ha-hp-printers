@@ -41,6 +41,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           last=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+          echo "last=$last" >> "$GITHUB_OUTPUT"
           if [ -z "$last" ]; then
             echo "No previous release; releasing."
             echo "release=true" >> "$GITHUB_OUTPUT"
@@ -111,6 +112,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          LAST: ${{ steps.changed.outputs.last }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -126,7 +128,30 @@ jobs:
             git commit -m "Release $VERSION [skip ci]"
             git push origin HEAD:main
           fi
+          # Notes are built from commit subjects, not from --generate-notes.
+          # That builds its list out of merged pull requests, and this
+          # repository commits straight to main, so it produces nothing but a
+          # changelog link.
+          # A release whose tag was deleted still shows up in the release
+          # list, so the tag is verified rather than assumed -- otherwise
+          # git log fails the step after the manifest has been committed.
+          last="${LAST}"
+          if [ -n "$last" ] && git rev-parse -q --verify "refs/tags/$last" >/dev/null; then
+            range="$last..HEAD"
+          else
+            last=""
+            range="HEAD"
+          fi
+          {
+            git log --no-merges --pretty=format:'- %s' "$range"
+            echo
+            if [ -n "$last" ]; then
+              echo
+              echo "**Full changelog**: https://github.com/${GITHUB_REPOSITORY}/compare/${last}...v${VERSION}"
+            fi
+          } > /tmp/release-notes.md
+          cat /tmp/release-notes.md
           gh release create "v$VERSION" \
             --target "$(git rev-parse HEAD)" \
             --title "v$VERSION" \
-            --generate-notes
+            --notes-file /tmp/release-notes.md
