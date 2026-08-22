@@ -96,6 +96,12 @@ def make_printer_data(**overrides: Any) -> PrinterData:
             jam_events=0,
             mispick_events=0,
         ),
+        "scan": SubunitUsage(
+            scan_images=9,
+            adf_images=6,
+            flatbed_images=3,
+            duplex_sheets=1,
+        ),
         "copy": SubunitUsage(
             total_impressions=20,
             monochrome_impressions=15,

@@ -129,6 +129,10 @@ These appear only when the printer has a scanner subunit.
 | Pages scanned from feeder | sensor (total_increasing) | Pages pulled through the ADF. |
 | Pages scanned from glass | sensor (total_increasing) | Pages scanned from the flatbed. |
 | Double-sided sheets scanned | sensor (total_increasing) | Duplex sheets pulled through the feeder. Feederless models do not report it. |
+| Scan job pages | sensor (total_increasing) | Pages captured by a scan job. The four "scan job" counters come from the scan application, not the scanner engine: the engine counts every pass it makes, so its totals include copies. On an M182nw the engine's 962 flatbed images are 929 scan-job pages plus 35 copies. |
+| Scan job pages from feeder | sensor (total_increasing) | Scan-job pages pulled through the ADF. |
+| Scan job pages from glass | sensor (total_increasing) | Scan-job pages taken from the flatbed. |
+| Double-sided scan job sheets | sensor (total_increasing) | Duplex sheets scanned as part of a scan job. |
 | Scanner jams | sensor (total_increasing) | Jam events attributed to the scanner. |
 | Scanner mispicks | sensor (total_increasing) | Mispick events attributed to the scanner. |
 

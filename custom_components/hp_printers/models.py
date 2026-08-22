@@ -127,6 +127,11 @@ class PrinterData:
     consumables: dict[str, Consumable] = field(default_factory=dict)
     printer: SubunitUsage = field(default_factory=SubunitUsage)
     scanner: SubunitUsage = field(default_factory=SubunitUsage)
+    # ScanApplicationSubunit counts pages captured by a scan job. The scanner
+    # engine counts every pass it makes, so it also includes copies: on the
+    # M182nw the engine's 962 flatbed images are the scan application's 929
+    # plus 35 copies (a few passes predate the copy counter).
+    scan: SubunitUsage = field(default_factory=SubunitUsage)
     copy: SubunitUsage = field(default_factory=SubunitUsage)
     events: list[EventLogEntry] = field(default_factory=list)
     jobs: list[JobEntry] = field(default_factory=list)

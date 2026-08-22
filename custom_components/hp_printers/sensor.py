@@ -130,6 +130,33 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         lambda d: d.scanner.duplex_sheets,
         "scanner",
     ),
+    # --- scan-job counters ---
+    # These belong to the scanner sub-device but read the scan application,
+    # not the engine: the engine total includes copies, these do not.
+    _counter(
+        "scan_job_pages",
+        "scan_job_pages",
+        lambda d: d.scan.scan_images,
+        "scanner",
+    ),
+    _counter(
+        "scan_job_adf_pages",
+        "scan_job_adf_pages",
+        lambda d: d.scan.adf_images,
+        "scanner",
+    ),
+    _counter(
+        "scan_job_flatbed_pages",
+        "scan_job_flatbed_pages",
+        lambda d: d.scan.flatbed_images,
+        "scanner",
+    ),
+    _counter(
+        "scan_job_duplex_sheets",
+        "scan_job_duplex_sheets",
+        lambda d: d.scan.duplex_sheets,
+        "scanner",
+    ),
     _counter("scanner_jams", "scanner_jams", lambda d: d.scanner.jam_events, "scanner"),
     _counter(
         "scanner_mispicks",

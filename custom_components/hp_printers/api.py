@@ -275,6 +275,7 @@ class LEDMClient:
             consumables=consumables,
             printer=self._parse_subunit(usage_doc, "PrinterSubunit"),
             scanner=self._parse_subunit(usage_doc, "ScannerEngineSubunit"),
+            scan=self._parse_subunit(usage_doc, "ScanApplicationSubunit"),
             copy=self._parse_subunit(usage_doc, "CopyApplicationSubunit"),
             events=events,
             jobs=jobs,

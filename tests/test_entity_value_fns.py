@@ -202,6 +202,12 @@ def test_subunit_sensors_route_to_scanner_and_copier() -> None:
     # subunit: the copier's feeder and glass counts are not the scanner's.
     assert routed["scanner_duplex_sheets"].native_value == 2
     assert routed["scanner_flatbed_images"].native_value == 3
+    # The scan application and the scanner engine both report flatbed images
+    # and must not be confused: the engine total includes copies.
+    assert routed["scan_job_flatbed_pages"].native_value == 3
+    assert routed["scan_job_pages"].native_value == 9
+    assert routed["scan_job_adf_pages"].native_value == 6
+    assert routed["scan_job_duplex_sheets"].native_value == 1
     assert routed["copy_adf_pages"].native_value == 12
     assert routed["copy_flatbed_pages"].native_value == 8
 
@@ -367,6 +373,7 @@ async def test_sensor_setup_entry_filters_missing_subunits() -> None:
         make_printer_data(
             printer=SubunitUsage(total_impressions=1),
             scanner=SubunitUsage(),
+            scan=SubunitUsage(),
             copy=SubunitUsage(),
         ),
     )
@@ -384,6 +391,10 @@ async def test_sensor_setup_entry_filters_missing_subunits() -> None:
         "scanner_adf_images",
         "scanner_flatbed_images",
         "scanner_duplex_sheets",
+        "scan_job_pages",
+        "scan_job_adf_pages",
+        "scan_job_flatbed_pages",
+        "scan_job_duplex_sheets",
         "scanner_jams",
         "scanner_mispicks",
     ):

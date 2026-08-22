@@ -129,6 +129,18 @@
       },
       "cartridge_genuine_refills": {
         "default": "mdi:refresh"
+      },
+      "scan_job_pages": {
+        "default": "mdi:file-image-outline"
+      },
+      "scan_job_adf_pages": {
+        "default": "mdi:tray-arrow-up"
+      },
+      "scan_job_flatbed_pages": {
+        "default": "mdi:image-outline"
+      },
+      "scan_job_duplex_sheets": {
+        "default": "mdi:book-open-page-variant-outline"
       }
     },
     "binary_sensor": {

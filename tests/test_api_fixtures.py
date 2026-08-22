@@ -184,7 +184,13 @@ def test_m182nw_fixture_pins_known_values() -> None:
     scanner = client._parse_subunit(usage, "ScannerEngineSubunit")  # noqa: SLF001
     copier = client._parse_subunit(usage, "CopyApplicationSubunit")  # noqa: SLF001
 
+    scan_app = client._parse_subunit(usage, "ScanApplicationSubunit")  # noqa: SLF001
+
+    # The engine counts every pass, including copies; the scan application
+    # counts only scan jobs. Keeping them apart is the whole point of
+    # parsing each subunit in its own scope.
     assert scanner.flatbed_images == 962
+    assert scan_app.flatbed_images == 929
     # No ADF on this model: no feeder or duplex counters on either subunit.
     assert scanner.duplex_sheets is None
     assert copier.adf_images is None

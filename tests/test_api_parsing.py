@@ -73,6 +73,9 @@ async def test_async_get_data_parses_full_response() -> None:
           <ScannerEngineSubunit>
             <TotalImpressions>10</TotalImpressions>
           </ScannerEngineSubunit>
+          <ScanApplicationSubunit>
+            <FlatbedImages>7</FlatbedImages>
+          </ScanApplicationSubunit>
           <CopyApplicationSubunit>
             <TotalImpressions>5</TotalImpressions>
           </CopyApplicationSubunit>
@@ -137,6 +140,7 @@ async def test_async_get_data_parses_full_response() -> None:
     assert data.printer.total_impressions == 200
     assert data.printer.jam_events == 1
     assert data.scanner.scan_images is None  # field absent in the response
+    assert data.scan.flatbed_images == 7
     assert data.copy.total_impressions == 5
     assert data.genuine_color_impressions == 50
     assert data.genuine_mono_impressions == 100

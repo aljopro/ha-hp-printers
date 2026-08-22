@@ -141,6 +141,18 @@
       "scanner_duplex_sheets": {
         "name": "Double-sided sheets scanned"
       },
+      "scan_job_pages": {
+        "name": "Scan job pages"
+      },
+      "scan_job_adf_pages": {
+        "name": "Scan job pages from feeder"
+      },
+      "scan_job_flatbed_pages": {
+        "name": "Scan job pages from glass"
+      },
+      "scan_job_duplex_sheets": {
+        "name": "Double-sided scan job sheets"
+      },
       "scanner_jams": {
         "name": "Scanner jams"
       },
