@@ -15,6 +15,8 @@ replacement it makes so you can see what changed.
 """
 
 import argparse
+from collections.abc import Callable
+import ipaddress
 from pathlib import Path
 import re
 
@@ -33,31 +35,68 @@ IDENTIFIER_TAGS: dict[str, str | None] = {
     "SupplySerialNumber": "SUPPLY-ANON-0000",
     "ConsumableSerialNumber": "CTR-ANON-0000",
     "ConsumableUniqueID": "UID-ANON-0000",
-    # Network/identity
+    # Network/identity. IOConfigDyn names the host four different ways and
+    # carries the MAC twice -- once as HardwareAddress and once embedded in
+    # the Bonjour service name -- so each spelling is listed explicitly.
     "HostName": "printer.local",
     "FriendlyName": "printer.local",
     "MACAddress": "00:00:00:00:00:00",
+    "Hostname": "printer",
+    "CurrentHostname": "printer",
+    "DefaultHostname": "printer",
+    "PreferredHostname": "printer",
+    "BOOTP_DHCPv4SuppliedHostname": "printer",
+    "HardwareAddress": "000000000000",
+    "ApplicationServiceName": "HP printer (000000)",
+    "DomainName": "local",
+    "BOOTP_DHCPv4SuppliedDomainName": "local",
+    "WINSServerName": "NOT_SET",
+    # Not an identifier, but the IPv4 text pattern below would otherwise
+    # rewrite a netmask into an address, which reads as a parser bug.
+    "SubnetMask": "255.255.255.0",
 }
+
+
+def _ipv6_placeholder(match: re.Match[str]) -> str:
+    """Replace a match only when it really is an IPv6 address."""
+    try:
+        ipaddress.IPv6Address(match.group(0))
+    except ValueError:
+        return match.group(0)
+    return "2001:db8::1"
 
 
 # Patterns for free-text identifiers that may appear inside any element.
 # The capture is left intact apart from the substitution so structural
 # fidelity is preserved.
-TEXT_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+TEXT_PATTERNS: tuple[
+    tuple[re.Pattern[str], str | Callable[[re.Match[str]], str]], ...
+] = (
     # IPv4 addresses.
     (
         re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b"),
         "192.0.2.1",
     ),
-    # IPv6 addresses (with or without zone id).
+    # IPv6 addresses, including the compressed "::" forms a printer reports
+    # for its link-local and ULA addresses. The candidate is validated rather
+    # than trusted to the regex, so a value that merely looks address-shaped
+    # (a time, an enum such as 100TX_FULL) is left alone.
     (
-        re.compile(r"\b(?:[0-9a-fA-F]{1,4}:){2,7}[0-9a-fA-F]{1,4}\b"),
-        "2001:db8::1",
+        re.compile(
+            r"(?<![0-9A-Za-z:.])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}"
+            r"(?![0-9A-Za-z:.])"
+        ),
+        _ipv6_placeholder,
     ),
     # IPv6 mDNS hostnames (NPI prefix + MAC-derived suffix).
     (
         re.compile(r"\bNPI[A-F0-9]{6,}\.local\.?\b", re.IGNORECASE),
         "printer.local",
+    ),
+    # The same name without the domain, as IOConfigDyn reports it.
+    (
+        re.compile(r"\bNPI[A-F0-9]{6,}\b", re.IGNORECASE),
+        "printer",
     ),
 )
 
@@ -97,6 +136,10 @@ def _walk_and_scrub(
                     replacements.append((local, original, replacement))
                 if replacement:
                     child.text = replacement
+                # The value was replaced wholesale; running the free-text
+                # patterns over the replacement would rewrite it again --
+                # a netmask placeholder into an IP, for instance.
+                continue
         # Also scrub text content of any other element for IP / hostname patterns.
         if child.text:
             scrubbed = child.text
@@ -139,13 +182,23 @@ def _substitute_product_number(
     return substituted
 
 
-def anonymize_file(path: Path) -> list[tuple[str, str, str]]:
-    """Anonymize one XML file in place and return the list of replacements."""
+def anonymize_file(
+    path: Path, target: Path | None = None
+) -> list[tuple[str, str, str]]:
+    """Anonymize one XML file and return the replacements it made.
+
+    Writes the result to ``target`` when given. This is the single entry
+    point: ``main`` must not reimplement the pipeline, because a second copy
+    is a second thing to keep in step -- which is exactly how the
+    ProductNumber substitution came to be undone again after being fixed.
+    """
     raw = path.read_text(encoding="utf-8")
     root = DefusedET.fromstring(raw)
     replacements: list[tuple[str, str, str]] = []
     substituted = _substitute_product_number(root, replacements)
     _walk_and_scrub(root, replacements, substituted)
+    if target is not None:
+        target.write_bytes(DefusedET.tostring(root, encoding="utf-8"))
     return replacements
 
 
@@ -172,13 +225,7 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=True)
 
     for path in sorted(args.input.glob("*.xml")):
-        raw = path.read_text(encoding="utf-8")
-        root = DefusedET.fromstring(raw)
-        replacements: list[tuple[str, str, str]] = []
-        _substitute_product_number(root, replacements)
-        _walk_and_scrub(root, replacements)
-        target = output / path.name
-        target.write_bytes(DefusedET.tostring(root, encoding="utf-8"))
+        replacements = anonymize_file(path, output / path.name)
         print(f"{path.name}: {len(replacements)} replacement(s)")  # noqa: T201
         for local, original, replacement in replacements:
             print(f"  {local}: {original!r} -> {replacement!r}")  # noqa: T201
