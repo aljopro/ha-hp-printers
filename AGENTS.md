@@ -160,6 +160,7 @@ Two rules the anonymizer has already been bitten by:
 - **Releases are automatic.** `.github/workflows/release.yaml` runs after CI succeeds on `main`, computes the next calendar version, writes it into `manifest.json`, commits, tags and publishes. Nothing to bump by hand.
 - A release is cut only when something under `custom_components/` changed since the last release. Documentation, CI and test-only commits ship nothing to a user and get no version.
 - The release commit carries `[skip ci]`, which is what stops it triggering CI and looping back into this workflow. Do not remove it.
+- The next version is computed from **both** existing releases and existing tags, and the job fails if the computed tag already exists. Deleting a release leaves its tag behind, and reusing that number would silently attach the new release to the old tag's commit.
 - Releases are cut from the exact commit CI passed on, not from whatever `main` points at when the job runs.
 - HACS reads **published** releases. A draft or a bare tag is invisible to it, and a draft that was never tagged only appears on the repository's Releases page, not at any tag URL.
 - release-drafter was removed: it categorises merged pull requests, and this repository commits directly to `main`, so it produced empty drafts. If the workflow ever moves to PRs, it is worth restoring.

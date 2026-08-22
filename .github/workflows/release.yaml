@@ -61,14 +61,34 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           month=$(date -u +%Y.%-m)
-          # Highest RELEASE already used this month, or -1 if the month is new.
-          highest=$(gh release list --limit 100 --json tagName --jq \
-            '[.[].tagName | select(startswith("v'"$month"'."))] | .[]' \
-            | sed "s/^v${month}\.//" | sort -n | tail -1)
+          # Consider tags as well as releases. Deleting a release leaves its
+          # tag behind, and reusing that number would attach the new release
+          # to the old tag's commit rather than this one.
+          highest=$(
+            {
+              gh release list --limit 100 --json tagName --jq '.[].tagName'
+              git tag --list "v${month}.*"
+            } \
+              | grep "^v${month}\." \
+              | sed "s/^v${month}\.//" \
+              | grep -E '^[0-9]+$' \
+              | sort -n | tail -1
+          )
           next=$(( ${highest:--1} + 1 ))
           version="${month}.${next}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Next version: $version"
+
+      - name: Refuse to reuse an existing tag
+        if: steps.changed.outputs.release == 'true'
+        env:
+          TAG: v${{ steps.version.outputs.version }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::$TAG already exists as a tag. Computing it again"\
+              " means the version arithmetic and the tags disagree."
+            exit 1
+          fi
 
       - name: Write the version into the manifest
         if: steps.changed.outputs.release == 'true'
