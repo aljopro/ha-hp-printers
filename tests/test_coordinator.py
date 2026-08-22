@@ -82,7 +82,10 @@ async def test_async_fetch_update_refreshes_static_info_when_stale() -> None:
     _, new_info, _ = await async_fetch_update(
         client=client,
         product_info=info,
-        static_fetched_at=0.0,
+        # Not 0.0: monotonic() counts from an arbitrary origin, and on a
+        # freshly booted CI runner it can be smaller than the six-hour
+        # window, which made "stale" read as "still fresh".
+        static_fetched_at=time.monotonic() - STATIC_REFRESH_INTERVAL - 1,
         device_name="Office printer",
     )
 

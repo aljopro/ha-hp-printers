@@ -1,17 +1,17 @@
 {
+  "domain": "hp_printers",
+  "name": "HP Printers",
   "codeowners": [
     "@aljopro"
   ],
   "config_flow": true,
   "documentation": "https://github.com/aljopro/ha-hp-printers",
-  "domain": "hp_printers",
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/aljopro/ha-hp-printers/issues",
   "loggers": [
     "custom_components.hp_printers"
   ],
-  "name": "HP Printers",
   "requirements": [
     "defusedxml>=0.7.1"
   ],
