@@ -3,8 +3,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
@@ -22,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+import voluptuous as vol
 
 from .api import HPPrinterConnectionError, HPPrinterError, LEDMClient
 from .const import (

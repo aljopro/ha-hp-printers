@@ -13,11 +13,11 @@ and ``LEDMClient``.
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.const import CONF_PORT, CONF_SSL
 import pytest
 
 from custom_components.hp_printers.api import HPPrinterConnectionError, HPPrinterError
 from custom_components.hp_printers.config_flow import HPPrintersConfigFlow
-from homeassistant.const import CONF_PORT, CONF_SSL
 
 
 def _build_flow() -> HPPrintersConfigFlow:

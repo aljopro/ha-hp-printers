@@ -1,6 +1,6 @@
 rules:
   config_flow: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -26,7 +26,7 @@ rules:
   log-when-unavailable: todo
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
   devices: done
   diagnostics: done
   discovery: done

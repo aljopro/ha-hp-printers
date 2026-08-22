@@ -14,7 +14,10 @@
 - Run `./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests`.
 - Run `./.venv/bin/python -m compileall -q custom_components/hp_printers tests` for a syntax-only check.
 - Ruff is configured for Home Assistant conventions in `ruff_ha.toml`; do not substitute an ambient Ruff/Python version when the repository venv is available.
-- `pytest-asyncio` is pinned to `>=0.24,<1.0` for compatibility with the bundled Home Assistant test tooling; using a newer version will break imports inside HA's recorder fixtures.
+- The test stack is a single pin: `pytest-homeassistant-custom-component==0.13.356`, which transitively fixes `homeassistant==2026.8.2`, `pytest==9.0.3` and `pytest-asyncio==1.4.0`. Do not pin pytest or pytest-asyncio separately in `requirements_test.txt`; a separate pin conflicts with what this package requires and breaks CI while local runs stay green.
+- The suite requires Python 3.14, which that package's Home Assistant pin also requires.
+- `ruff_ha.toml` is extracted from Home Assistant core but **diverges deliberately in one place**: `known-first-party` is `["custom_components", "tests", "scripts"]`, not `["homeassistant"]`. Core builds the `homeassistant` package; here it is a dependency. Left as core had it, isort groups `custom_components` with third-party imports and CI fails on ordering. Re-apply this if the file is ever re-extracted.
+- Lint and format **`scripts` as well as `custom_components/hp_printers` and `tests`** — CI does, and a check that omits a directory hides real errors in it.
 
 ## Test Policy
 
@@ -28,6 +31,12 @@
   alongside it.
 - Do not delete a test to make a change pass. If a test is wrong, fix the
   test and explain why in the commit message.
+- Coverage is currently 99%, with every module at or above 97%, and
+  `quality_scale.yaml` claims `test-coverage` and
+  `config-flow-test-coverage` on that basis. Keep it there: if a change
+  drops a module below 95%, either add the tests or downgrade the claim.
+  Measure with
+  `./.venv/bin/python -m pytest -q --cov=custom_components/hp_printers --cov-report=term-missing`.
 
 ## Architecture
 
@@ -54,11 +63,38 @@ milliseconds. Use the right layer for the change:
 - **Coordinator** (`tests/test_coordinator.py`): exercises
   `async_fetch_update` directly.
 - **Diagnostics** (`tests/test_diagnostics.py`): the redaction pipeline.
-- **Config flow** (`tests/test_config_flow_probe.py`): probe, reauth, and
-  reconfigure.
+- **Config flow, unit** (`tests/test_config_flow_probe.py`,
+  `tests/test_config_flow.py`): the probe helper, reauth, and `_flatten`
+  normalization, called directly.
+- **Parser edge cases** (`tests/test_api_edge_cases.py`): malformed and
+  absent values, and the HTTP boundary in `_fetch` with a fake session.
+- **Bootstrap, through hass** (`tests/test_init.py`,
+  `tests/test_config_flow_hass.py`): setup, unload, reload, and every flow
+  step driven through Home Assistant's own managers. These use
+  `pytest-homeassistant-custom-component`, which blocks all sockets, so
+  every network path must be mocked.
 - **Real captures** (`tests/test_api_fixtures.py`): when
   `tests/fixtures/<host>/` is present, the fixture tests replay real XML.
   Tests skip gracefully when no fixture exists.
+
+## Test fixtures and ordering
+
+- `tests/__init__.py` exposes `setup_integration(hass, entry)` as a plain
+  helper, called from the test body. It is deliberately **not** a fixture:
+  as a fixture it is ordered against the mocks by the test signature, and a
+  test listing it before the client patch runs setup against the real client
+  and trips the socket block. This mirrors
+  `homeassistant/tests/components/brother`.
+- Patch `LEDMClient` in **both** binding namespaces:
+  `custom_components.hp_printers.LEDMClient` and
+  `custom_components.hp_printers.config_flow.LEDMClient`.
+- Any test loading the integration through hass needs
+  `enable_custom_integrations`.
+- The mocked client must supply a real string for `base_url`; it reaches
+  `DeviceInfo(configuration_url=...)`, which rejects a `MagicMock`.
+- Unloading an entry does **not** remove its states. The entity registry
+  writes an `unavailable` state for each registered entity instead, so
+  assert on `STATE_UNAVAILABLE` rather than on absence.
 
 ## Capturing fixtures from a real printer
 

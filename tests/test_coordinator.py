@@ -10,6 +10,7 @@ the coordinator now delegates to.
 
 import time
 
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import pytest
 
 from custom_components.hp_printers.api import HPPrinterConnectionError, HPPrinterError
@@ -19,7 +20,6 @@ from custom_components.hp_printers.coordinator import (
     async_fetch_update,
 )
 from custom_components.hp_printers.models import PrinterData, ProductInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 
 class _StubClient:

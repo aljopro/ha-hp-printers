@@ -8,6 +8,8 @@ isn't redacted.
 
 from datetime import UTC, datetime
 
+from homeassistant.components.diagnostics import REDACTED
+from homeassistant.const import CONF_HOST
 import pytest
 
 from custom_components.hp_printers.diagnostics import (
@@ -15,8 +17,6 @@ from custom_components.hp_printers.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from custom_components.hp_printers.models import Consumable, JobEntry, PrinterData
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import CONF_HOST
 
 from .fakes import make_printer_data, make_product_info
 

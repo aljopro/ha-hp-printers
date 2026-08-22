@@ -1,1 +1,8 @@
-pytest>=8.0,<9
+# The Home Assistant test harness. This single pin transitively fixes
+# homeassistant==2026.8.2, pytest==9.0.3 and pytest-asyncio==1.4.0, so CI
+# and local runs agree and the suite is exercised against exactly the Home
+# Assistant release this integration targets.
+#
+# Pinning pytest separately here is a mistake: it conflicts with the version
+# this package requires.
+pytest-homeassistant-custom-component==0.13.356

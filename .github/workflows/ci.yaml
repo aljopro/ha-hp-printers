@@ -27,13 +27,13 @@ jobs:
           uv pip install --python .venv/bin/python -r requirements_test.txt
 
       - name: Ruff lint
-        run: ./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests
+        run: ./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests scripts
 
       - name: Ruff format check
-        run: ./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests
+        run: ./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests scripts
 
       - name: Compile check
-        run: ./.venv/bin/python -m compileall -q custom_components/hp_printers tests
+        run: ./.venv/bin/python -m compileall -q custom_components/hp_printers tests scripts
 
       - name: Run tests
         run: ./.venv/bin/python -m pytest -q

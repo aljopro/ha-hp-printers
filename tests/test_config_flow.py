@@ -1,7 +1,8 @@
 """Tests for config-flow input normalization."""
 
-from custom_components.hp_printers.config_flow import SECTION_ADVANCED, _flatten
 from homeassistant.const import CONF_PORT, CONF_SSL
+
+from custom_components.hp_printers.config_flow import SECTION_ADVANCED, _flatten
 
 
 def test_flatten_defaults_to_http_port() -> None:
@@ -33,4 +34,12 @@ def test_flatten_preserves_explicit_https_port_and_other_fields() -> None:
         "name": "Office printer",
         CONF_PORT: 8443,
         CONF_SSL: True,
+    }
+
+
+def test_flatten_plain_http_follows_default_port_back_to_80() -> None:
+    """Turning HTTPS off returns the untouched HTTPS default port to 80."""
+    assert _flatten({SECTION_ADVANCED: {CONF_SSL: False, CONF_PORT: 443}}) == {
+        CONF_PORT: 80,
+        CONF_SSL: False,
     }

@@ -209,7 +209,13 @@ mark-parentheses = false
 
 [lint.isort]
 force-sort-within-sections = true
-known-first-party = ["homeassistant"]
+# Diverges from Home Assistant core on purpose. Core builds the
+# `homeassistant` package, so there it is first-party. Here it is a
+# dependency, and the first-party code is the integration, its tests and
+# its scripts. Left as core had it, isort groups `custom_components` with
+# third-party imports and CI fails on ordering the editor never flags.
+# Re-apply this if ruff_ha.toml is ever re-extracted from core.
+known-first-party = ["custom_components", "tests", "scripts"]
 combine-as-imports = true
 split-on-trailing-comma = false
 
