@@ -8,6 +8,7 @@ path directly via the module-level ``async_fetch_update`` helper, which
 the coordinator now delegates to.
 """
 
+from datetime import timedelta
 import time
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,9 +16,11 @@ import pytest
 
 from custom_components.hp_printers.api import HPPrinterConnectionError, HPPrinterError
 from custom_components.hp_printers.coordinator import (
+    MAX_BACKOFF_INTERVAL,
     STATIC_REFRESH_INTERVAL,
     HPPrinterDataUpdateCoordinator,
     async_fetch_update,
+    backoff_interval,
 )
 from custom_components.hp_printers.models import PrinterData, ProductInfo
 
@@ -161,3 +164,33 @@ def test_coordinator_class_exposes_update_method() -> None:
     # setup. Without this guard, a future refactor that requires asyncio.run()
     # at import time would silently break Home Assistant boot.
     assert callable(HPPrinterDataUpdateCoordinator._async_update_data)  # noqa: SLF001
+
+
+def test_backoff_interval_returns_base_while_healthy() -> None:
+    """No failures means the configured interval, unchanged."""
+    base = timedelta(seconds=60)
+    assert backoff_interval(base, 0) == base
+    assert backoff_interval(base, -1) == base
+
+
+def test_backoff_interval_doubles_per_consecutive_failure() -> None:
+    """Each failure in a row doubles the wait before the next attempt."""
+    base = timedelta(seconds=60)
+    assert backoff_interval(base, 1) == timedelta(seconds=120)
+    assert backoff_interval(base, 2) == timedelta(seconds=240)
+    assert backoff_interval(base, 3) == timedelta(seconds=480)
+
+
+def test_backoff_interval_is_capped() -> None:
+    """A printer that stays down is polled every ten minutes, not less often."""
+    base = timedelta(seconds=60)
+    assert backoff_interval(base, 4) == MAX_BACKOFF_INTERVAL
+    assert backoff_interval(base, 99) == MAX_BACKOFF_INTERVAL
+
+
+def test_backoff_never_polls_faster_than_configured() -> None:
+    """A slow configured interval is a floor, not something backoff undercuts."""
+    base = timedelta(minutes=30)
+    # The cap is below the configured interval here; backing off must not
+    # turn a 30-minute poll into a 10-minute one.
+    assert backoff_interval(base, 5) >= base

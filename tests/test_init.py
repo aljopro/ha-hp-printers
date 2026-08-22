@@ -133,3 +133,33 @@ async def test_unique_id_is_serial(
 ):
     """Entries are keyed by serial number so DHCP changes do not duplicate."""
     assert mock_config_entry.unique_id == TEST_SERIAL
+
+
+async def test_coordinator_backs_off_while_the_printer_is_unreachable(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    mock_config_entry,
+    mock_ledm_client,
+):
+    """Repeated failures widen the polling interval; a success restores it."""
+    entry = mock_config_entry
+    await setup_integration(hass, entry)
+    coordinator = entry.runtime_data
+    configured = coordinator.update_interval
+
+    mock_ledm_client.async_get_data.side_effect = HPPrinterConnectionError("asleep")
+
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is False
+    first_failure = coordinator.update_interval
+    assert first_failure > configured
+
+    await coordinator.async_refresh()
+    assert coordinator.update_interval > first_failure
+
+    # The printer wakes up: the very next success goes back to the interval
+    # the user configured, rather than staying backed off.
+    mock_ledm_client.async_get_data.side_effect = None
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success is True
+    assert coordinator.update_interval == configured

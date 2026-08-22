@@ -44,6 +44,7 @@
 - `coordinator.py` polls dynamic data; the default interval is 60 seconds and the static product configuration is refreshed every six hours.
 - `sensor.py` and `binary_sensor.py` contain the actual entity descriptions. Parsing a field in `api.py` or `models.py` does not expose it in Home Assistant until an entity description is added there.
 - `config_flow.py` validates the printer before creating an entry, supports mDNS discovery via IPP/IPPS advertisements, and keys entries by printer serial number so DHCP address changes do not duplicate devices.
+- `coordinator.py` backs off on consecutive failures: `backoff_interval()` is a pure function so it is testable without hass, and `_apply_backoff` is the only place `update_interval` is mutated. The configured interval is a floor -- backoff must never make polling faster than the user asked for.
 - `coordinator.py` exposes `async_fetch_update` so the polling logic can be unit-tested without standing up a Home Assistant instance.
 - `strings.json` supplies config-flow and entity names; update it when adding or renaming user-visible entities.
 - `quality_scale.yaml` tracks which HA quality-scale rules the integration currently meets; update it when adding or removing coverage.

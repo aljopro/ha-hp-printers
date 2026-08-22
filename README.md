@@ -78,6 +78,10 @@ Then *Settings → Devices & Services → Add Integration → HP Printers*.
 
 Polling defaults to **60 seconds** and is adjustable under *Configure*. Printers
 sleep between jobs and polling wakes them, so slower is gentler on the hardware.
+When the printer stops answering — asleep, powered off, or off the network —
+the interval doubles per consecutive failure up to ten minutes, and snaps back
+to the configured value on the first successful read. Backing off never polls
+faster than you asked for: a 30-minute interval stays 30 minutes.
 
 ## Devices
 
