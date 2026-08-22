@@ -1,10 +1,24 @@
 # HP Printers for Home Assistant
 
-A local-polling Home Assistant integration for HP printers that speak **LEDM**
-(HP's "Low End Data Model" XML interface, served by the printer's embedded web
-server). No cloud, no account, no credentials.
+Local integration for HP printers that expose the **LEDM** XML interface from
+their embedded web server. Reads the printer over HTTP/HTTPS — no cloud, no
+account, no credentials, no writes.
 
-## Why another HP integration
+## What you get
+
+The printer itself is one device; each cartridge is a sub-device because
+cartridges are independently replaceable and have their own serial numbers.
+Depending on what the model reports, the integration exposes:
+
+- **Printer**: status, page counters, jams, mispicks, firmware build date,
+  event log, and diagnostic state.
+- **Scanner and copier**: their own counters, when those capabilities exist.
+- **Cartridges**: level, pages remaining, pages printed, part and serial
+  information, dates, genuine/clone status, and problem state.
+
+See [Devices](#devices) for the full list.
+
+## Why this one
 
 Because the interesting data was going unused. Alongside the usual toner levels
 and page counts, this exposes:
@@ -24,14 +38,28 @@ name — `sensor.laserjet_status`, not `sensor.hp_color_laserjet_mfp_m182nw_192_
 
 ## Installation
 
-**HACS** → three-dot menu → *Custom repositories* → add
-`https://github.com/aljopro/ha-hp-printers` as an **Integration**, then install
-and restart Home Assistant.
+### HACS
+
+[![Open your Home Assistant instance and show the HP Printers integration in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=aljopro&repository=ha-hp-printers&category=integration)
+
+If the button does not work, add the repository manually:
+
+1. Open **HACS** in Home Assistant.
+2. Open the three-dot menu and select **Custom repositories**.
+3. Enter `https://github.com/aljopro/ha-hp-printers`.
+4. Select **Integration** as the repository type and click **Add**.
+5. Search HACS for **HP Printers**, open it, and click **Download**.
+6. Restart Home Assistant.
 
 **Manually**: copy `custom_components/hp_printers` into your `config/custom_components`
 directory and restart.
 
 Then *Settings → Devices & Services → Add Integration → HP Printers*.
+
+## Requirements
+
+- An HP printer with an Embedded Web Server (EWS) that exposes the LEDM XML API.
+- Home Assistant **2026.8.2** or newer.
 
 ## Configuration
 
@@ -53,14 +81,39 @@ Entities whose data a given model does not report are not created at all —
 a printer with no document feeder, duplexer or fax simply gets fewer entities
 rather than a row of `unknown`.
 
+Depending on the model, entities cover:
+
+- Printer status, page counters, jams, mispicks, firmware information, event
+  history, and diagnostic state.
+- Scanner and copier counters, when those capabilities are present.
+- Per-cartridge level, pages remaining, pages printed, part information, dates,
+  genuine/clone status, and problem state.
+
+## Troubleshooting
+
+If setup cannot connect, confirm that the printer's EWS is reachable from the
+Home Assistant host. Open the printer's host and port in a browser first; most
+printers use HTTP on port 80. Enable **HTTPS** only when the printer's EWS is
+configured for it.
+
+For logs, enable debug logging from the integration device page:
+
+1. Open **Settings → Devices & Services**.
+2. Open **HP Printers** and select the printer.
+3. Open the three-dot menu and select **Enable debug logging**.
+4. Reproduce the problem, then return to the menu and select **Disable debug
+   logging**.
+
+When reporting a problem, also download diagnostics from the same menu. The
+diagnostic file redacts the printer host and serial identifiers while retaining
+the LEDM data needed to investigate unsupported models and missing entities.
+
 ## Compatibility
 
 Developed against an **HP Color LaserJet MFP M182nw**. LEDM is widely
 implemented across HP's consumer and small-office range, so other models are
 likely to work; the integration reads only endpoints it finds and skips what a
 device does not report. Reports of other models working (or not) are welcome.
-
-Requires Home Assistant **2026.8.2** or newer.
 
 ## A note on LEDM
 
