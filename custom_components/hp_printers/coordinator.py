@@ -22,6 +22,35 @@ type HPPrinterConfigEntry = ConfigEntry[HPPrinterDataUpdateCoordinator]
 STATIC_REFRESH_INTERVAL = timedelta(hours=6).total_seconds()
 
 
+async def async_fetch_update(
+    client: LEDMClient,
+    product_info: ProductInfo,
+    static_fetched_at: float,
+    device_name: str,
+) -> tuple[PrinterData, ProductInfo, float]:
+    """Fetch dynamic data and refresh static product info when stale.
+
+    Raises ``UpdateFailed`` if the printer cannot be reached. The function
+    is factored out of the coordinator class so it can be unit-tested
+    without standing up a Home Assistant instance.
+    """
+    try:
+        data = await client.async_get_data()
+        if monotonic() - static_fetched_at > STATIC_REFRESH_INTERVAL:
+            product_info = await client.async_get_product_info()
+            static_fetched_at = monotonic()
+    except HPPrinterError as error:
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_error",
+            translation_placeholders={
+                "device": device_name,
+                "error": repr(error),
+            },
+        ) from error
+    return data, product_info, static_fetched_at
+
+
 class HPPrinterDataUpdateCoordinator(DataUpdateCoordinator[PrinterData]):
     """Fetch data from a printer's LEDM endpoints."""
 
@@ -51,18 +80,14 @@ class HPPrinterDataUpdateCoordinator(DataUpdateCoordinator[PrinterData]):
 
     async def _async_update_data(self) -> PrinterData:
         """Fetch the current printer state."""
-        try:
-            data = await self.client.async_get_data()
-            if monotonic() - self._static_fetched_at > STATIC_REFRESH_INTERVAL:
-                self.product_info = await self.client.async_get_product_info()
-                self._static_fetched_at = monotonic()
-        except HPPrinterError as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_error",
-                translation_placeholders={
-                    "device": self.device_name,
-                    "error": repr(error),
-                },
-            ) from error
+        (
+            data,
+            self.product_info,
+            self._static_fetched_at,
+        ) = await async_fetch_update(
+            self.client,
+            self.product_info,
+            self._static_fetched_at,
+            self.device_name,
+        )
         return data

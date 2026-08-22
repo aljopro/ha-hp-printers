@@ -35,8 +35,47 @@
 - `coordinator.py` polls dynamic data; the default interval is 60 seconds and the static product configuration is refreshed every six hours.
 - `sensor.py` and `binary_sensor.py` contain the actual entity descriptions. Parsing a field in `api.py` or `models.py` does not expose it in Home Assistant until an entity description is added there.
 - `config_flow.py` validates the printer before creating an entry, supports mDNS discovery via IPP/IPPS advertisements, and keys entries by printer serial number so DHCP address changes do not duplicate devices.
+- `coordinator.py` exposes `async_fetch_update` so the polling logic can be unit-tested without standing up a Home Assistant instance.
 - `strings.json` supplies config-flow and entity names; update it when adding or renaming user-visible entities.
 - `quality_scale.yaml` tracks which HA quality-scale rules the integration currently meets; update it when adding or removing coverage.
+
+## Test Layers
+
+The unit suite is built from plain Python doubles in `tests/fakes.py`
+plus `MagicMock` for any HA layer we can't avoid, so most tests run in
+milliseconds. Use the right layer for the change:
+
+- **Parser behavior** (`tests/test_api.py`, `tests/test_api_parsing.py`,
+  `tests/test_api_fixtures.py`): pure XML parsing, no event loop.
+- **Models** (`tests/test_models.py`): dataclass invariants.
+- **Entity layer** (`tests/test_entity_value_fns.py`): instantiate each
+  description against a `FakeCoordinator` and assert
+  `native_value` / `is_on` / `extra_state_attributes` matches the README.
+- **Coordinator** (`tests/test_coordinator.py`): exercises
+  `async_fetch_update` directly.
+- **Diagnostics** (`tests/test_diagnostics.py`): the redaction pipeline.
+- **Config flow** (`tests/test_config_flow_probe.py`): probe, reauth, and
+  reconfigure.
+- **Real captures** (`tests/test_api_fixtures.py`): when
+  `tests/fixtures/<host>/` is present, the fixture tests replay real XML.
+  Tests skip gracefully when no fixture exists.
+
+## Capturing fixtures from a real printer
+
+Real LEDM payloads are the highest-value test input because they capture
+quirks no XML hand-rolled in a test file will reproduce. To add a
+fixture:
+
+1. Run `./.venv/bin/python scripts/capture_ledm.py --host <printer-host>`
+   from a machine on the same network. The script writes raw XML into
+   `scripts/captures/<host>-<timestamp>/`.
+2. Run `./.venv/bin/python scripts/anonymize_ledm.py scripts/captures/<dir>/`.
+   The anonymizer replaces `SerialNumber`, `UUID`, `ServiceID`, hostnames,
+   IPs, and cartridge serial numbers with stable dummies and swaps
+   `ProductNumber` for the captured `MakeAndModel`. Review the diff.
+3. Copy the `<dir>-anon` directory into `tests/fixtures/<short-name>/`
+   and commit. The fixture tests will pick it up automatically.
+4. The capture is read-only -- every request is a `GET`.
 
 ## Device/API Traps
 
