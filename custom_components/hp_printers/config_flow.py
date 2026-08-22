@@ -1,5 +1,6 @@
 """Config flow for the HP Printers integration."""
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -191,6 +192,18 @@ class HPPrintersConfigFlow(ConfigFlow, domain=DOMAIN):
                 "host": self._discovered[CONF_HOST],
             },
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication.
+
+        The integration reads LEDM without credentials, so the only reason HA
+        raises a reauth is the entry being moved to a different printer or
+        having stale connection data. Either way, the user should reconfigure
+        the host rather than re-enter a password.
+        """
+        return self.async_abort(reason="reconfigure_to_resolve")
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

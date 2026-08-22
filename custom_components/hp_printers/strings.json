@@ -60,7 +60,8 @@
     "abort": {
       "already_configured": "This printer is already set up.",
       "serial_mismatch": "That address belongs to a different printer than the one this entry was created for.",
-      "cannot_connect": "Found a printer, but could not read from it. It may be asleep, or it may not support the management interface this integration uses."
+      "cannot_connect": "Found a printer, but could not read from it. It may be asleep, or it may not support the management interface this integration uses.",
+      "reconfigure_to_resolve": "This integration reads the printer without credentials. Update the host address from the integration's settings to continue."
     }
   },
   "options": {
