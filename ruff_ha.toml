@@ -230,7 +230,7 @@ split-on-trailing-comma = false
 
 # Temporary
 "homeassistant/**" = ["PTH"]
-"tests/**" = ["PTH"]
+"tests/**" = ["PTH", "TID251"]
 
 [lint.mccabe]
 max-complexity = 25

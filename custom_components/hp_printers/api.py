@@ -222,6 +222,11 @@ class LEDMClient:
     async def async_get_product_info(self) -> ProductInfo:
         """Read static device information."""
         root = await self._fetch(ENDPOINT_PRODUCT_CONFIG)
+        return self._parse_product_info(root)
+
+    @staticmethod
+    def _parse_product_info(root: Element) -> ProductInfo:
+        """Build a ``ProductInfo`` from a parsed ``ProductConfigDyn`` root."""
         info = _find(root, "ProductInformation")
         if info is None:
             raise HPPrinterParseError("ProductConfigDyn missing ProductInformation")
