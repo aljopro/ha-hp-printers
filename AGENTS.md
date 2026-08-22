@@ -156,5 +156,6 @@ Two rules the anonymizer has already been bitten by:
 
 ## Releases
 
-- Cut a release by pushing a `vX.Y.Z` tag that matches `manifest.json` `version`; the HACS action (`.github/workflows/hacs.yaml`) drafts the release and `release-drafter.yaml` keeps the changelog current as PRs land.
+- Cut a release by pushing a `vX.Y.Z` tag that matches `manifest.json` `version`, then **publish** the draft release-drafter has been maintaining. HACS reads published releases; a draft or a bare tag is invisible to it.
+- `.github/workflows/hacs.yaml` runs `hacs/action@main`, the same validator HACS uses to review a submission to `hacs/default`. It runs on every push, on PRs, and nightly -- not at tag time, because a release-time failure is discovered too late to be useful.
 - Label PRs so release-drafter categorizes them correctly: `breaking`, `enhancement`, `bug`, `documentation`, or `chore`.

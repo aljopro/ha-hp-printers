@@ -1,17 +1,29 @@
-name: HACS Action
+# Runs HACS's own validator against this repository. It is the same code
+# HACS uses to review a submission to hacs/default, so a failure here is a
+# failure there. It runs continuously rather than only at release time:
+# finding out at the moment you cut a tag is finding out too late.
+name: HACS
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # HACS's requirements change under us; a nightly run catches that
+    # without waiting for the next commit.
+    - cron: "0 4 * * *"
+  workflow_dispatch:
+
+permissions: {}
 
 jobs:
-  hacs:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Publish to HACS
-        uses: hacs/integration-action@main
+      - name: HACS validation
+        uses: hacs/action@main
         with:
           category: integration
