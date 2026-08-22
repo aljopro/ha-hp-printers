@@ -17,7 +17,7 @@ from pathlib import Path
 
 from defusedxml import ElementTree as DefusedET
 
-from custom_components.hp_printers.api import LEDMClient, _strip_namespaces
+from custom_components.hp_printers.api import LEDMClient, _find, _strip_namespaces
 from custom_components.hp_printers.const import (
     ENDPOINT_CONSUMABLE_CONFIG,
     ENDPOINT_PRODUCT_CONFIG,
@@ -103,14 +103,12 @@ def test_fixtures_status_extracts_status_category() -> None:
     if not hosts:
         return
 
-    client = LEDMClient.__new__(LEDMClient)
-
     for host_dir in hosts:
         status_doc = _load(ENDPOINT_PRODUCT_STATUS, host_dir)
         if status_doc is None:
             continue
 
-        status_node = client._find(status_doc, "Status")  # noqa: SLF001
+        status_node = _find(status_doc, "Status")
         assert status_node is not None, (
             f"{host_dir.name}: ProductStatusDyn is missing Status"
         )
@@ -137,3 +135,58 @@ def test_fixtures_logs_returns_event_and_job_lists() -> None:
         assert isinstance(jobs, list)
         # ``assert_text`` is allowed to be None.
         assert assert_text is None or isinstance(assert_text, str)
+
+
+def test_m182nw_fixture_pins_known_values() -> None:
+    """The committed M182nw capture parses to the values that device reports.
+
+    The generic tests above accept any fixture; this one pins the one we
+    actually have, so a parser regression shows up as a concrete diff rather
+    than a vaguer "still a list" assertion. Everything here was read off the
+    real printer.
+    """
+    host_dir = FIXTURES_DIR / "m182nw"
+    if not host_dir.is_dir():
+        return
+
+    client = LEDMClient.__new__(LEDMClient)
+    info = LEDMClient._parse_product_info(  # noqa: SLF001
+        _load(ENDPOINT_PRODUCT_CONFIG, host_dir)
+    )
+
+    assert info.make_and_model == "HP Color LaserJet MFP M182nw"
+    assert info.firmware_date == "2023-12-06"
+    # This model does not report ProductInformation/Manufacturer at all, so
+    # the printer build date stays None and no entity is created for it.
+    assert info.manufactured_at is None
+
+    consumables = client._parse_consumables(  # noqa: SLF001
+        _load(ENDPOINT_CONSUMABLE_CONFIG, host_dir),
+        _load(ENDPOINT_PRODUCT_USAGE, host_dir),
+    )
+
+    assert sorted(consumables) == ["C", "K", "M", "Y"]
+    # Station is the physical slot; the black cartridge is slot 0 here.
+    assert {code: c.station for code, c in consumables.items()} == {
+        "K": 0,
+        "Y": 1,
+        "M": 2,
+        "C": 3,
+    }
+    assert all(c.consumable_type == "toner" for c in consumables.values())
+    # The device has no real-time clock, so every Installation/Date is the
+    # 1976 placeholder and the installed-date sensor is never created.
+    assert all(c.installed_at is None for c in consumables.values())
+    # Nor does it report refill counters.
+    assert all(c.counterfeit_refills is None for c in consumables.values())
+
+    usage = _load(ENDPOINT_PRODUCT_USAGE, host_dir)
+    scanner = client._parse_subunit(usage, "ScannerEngineSubunit")  # noqa: SLF001
+    copier = client._parse_subunit(usage, "CopyApplicationSubunit")  # noqa: SLF001
+
+    assert scanner.flatbed_images == 962
+    # No ADF on this model: no feeder or duplex counters on either subunit.
+    assert scanner.duplex_sheets is None
+    assert copier.adf_images is None
+    assert copier.flatbed_images is None
+    assert copier.total_impressions == 35

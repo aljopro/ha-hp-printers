@@ -77,10 +77,18 @@ def _identifier_value(local: str, configured: str | None) -> str | None:
 def _walk_and_scrub(
     element: object,
     replacements: list[tuple[str, str, str]],
+    skip: set[int] | None = None,
 ) -> None:
-    """Recursively replace text in identifier tags and free-text patterns."""
+    """Recursively replace text in identifier tags and free-text patterns.
+
+    ``skip`` holds elements another pass has already rewritten, so their new
+    value is not itself treated as an identifier and overwritten again.
+    """
+    skip = skip or set()
     for child in getattr(element, "iter", list)():
         local = _local_name(child.tag)  # type: ignore[attr-defined]
+        if id(child) in skip:
+            continue
         if local in IDENTIFIER_TAGS and child.text:
             original = child.text.strip()
             if original:
@@ -103,12 +111,14 @@ def _walk_and_scrub(
 
 def _substitute_product_number(
     root: object, replacements: list[tuple[str, str, str]]
-) -> None:
+) -> set[int]:
     """Replace ``ProductNumber`` with the captured ``MakeAndModel``.
 
     Keeps the model name recognizable in the fixture while the SKU stays
-    out of the public repository.
+    out of the public repository. Returns the elements it rewrote so the
+    identifier pass leaves them alone.
     """
+    substituted: set[int] = set()
     model = None
     product_number = None
 
@@ -123,7 +133,10 @@ def _substitute_product_number(
         for child in root.iter():  # type: ignore[attr-defined]
             if _local_name(child.tag) == "ProductNumber":
                 child.text = model
+                substituted.add(id(child))
                 replacements.append(("ProductNumber", product_number, model))
+
+    return substituted
 
 
 def anonymize_file(path: Path) -> list[tuple[str, str, str]]:
@@ -131,8 +144,8 @@ def anonymize_file(path: Path) -> list[tuple[str, str, str]]:
     raw = path.read_text(encoding="utf-8")
     root = DefusedET.fromstring(raw)
     replacements: list[tuple[str, str, str]] = []
-    _substitute_product_number(root, replacements)
-    _walk_and_scrub(root, replacements)
+    substituted = _substitute_product_number(root, replacements)
+    _walk_and_scrub(root, replacements, substituted)
     return replacements
 
 

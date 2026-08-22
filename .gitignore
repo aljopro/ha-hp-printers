@@ -219,3 +219,7 @@ __marimo__/
 
 # project
 .venv/
+
+# Raw and anonymized LEDM captures; only the reviewed copy in
+# tests/fixtures/ belongs in the repository.
+scripts/captures/

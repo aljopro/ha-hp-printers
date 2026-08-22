@@ -1,0 +1,22 @@
+<ns0:ProductLogsDyn xmlns:ns0="http://www.hp.com/schemas/imaging/con/ledm/productlogsdyn/2008/01/16" xmlns:ns2="http://www.hp.com/schemas/imaging/con/dictionaries/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.hp.com/schemas/imaging/con/dictionaries/1.0/ dd/DataDictionaryMasterLEDM.xsd http://www.hp.com/schemas/imaging/con/ledm/productlogsdyn/2008/01/16 ProductLogsDyn.xsd"><ns2:Version><ns2:Revision>SVN-IPG-LEDM.29</ns2:Revision></ns2:Version><ns0:EventLog><ns0:Event><ns2:SequenceNumber>6</ns2:SequenceNumber><ns2:EventCode>49.0622</ns2:EventCode><ns2:TotalImpressions>1439</ns2:TotalImpressions></ns0:Event><ns0:Event><ns2:SequenceNumber>5</ns2:SequenceNumber><ns2:EventCode>13.0201</ns2:EventCode><ns2:TotalImpressions>1141</ns2:TotalImpressions></ns0:Event><ns0:Event><ns2:SequenceNumber>4</ns2:SequenceNumber><ns2:EventCode>49.0703</ns2:EventCode><ns2:TotalImpressions>1033</ns2:TotalImpressions></ns0:Event><ns0:Event><ns2:SequenceNumber>3</ns2:SequenceNumber><ns2:EventCode>10.7003</ns2:EventCode><ns2:TotalImpressions>785</ns2:TotalImpressions></ns0:Event><ns0:Event><ns2:SequenceNumber>2</ns2:SequenceNumber><ns2:EventCode>10.3100</ns2:EventCode><ns2:TotalImpressions>628</ns2:TotalImpressions></ns0:Event><ns0:Event><ns2:SequenceNumber>1</ns2:SequenceNumber><ns2:EventCode>41.3000</ns2:EventCode><ns2:TotalImpressions>324</ns2:TotalImpressions></ns0:Event></ns0:EventLog><ns0:ErrorLog>ASSERT FAILED
+Task: pwrmgr_main.rxe
+View:4ac09f2aae6b:/work/jenkins/gitbuilder3/workspace/phx@@9ab13b5
+Built:20231206_1610
+File: pwrmgr_transition.c Line: 703
+Pg:1033
+0x00f28af4
+0x00f28c30
+0x00f2799c
+
+ASSERT FAILED
+Task: pwrmgr_main.rxe
+View:4ac09f2aae6b:/work/jenkins/gitbuilder3/workspace/phx@@9ab13b5
+Built:20231206_1610
+File: pwrmgr_transition.c Line: 622
+Pg:1439
+0x00f28af4
+0x00f28c30
+0x00f2799c
+
+
+</ns0:ErrorLog><ns0:ColorUsageJobLog><ns0:UsageTotals><ns2:TotalEntries>1</ns2:TotalEntries><ns2:MonochromeImpressions>1</ns2:MonochromeImpressions><ns2:ColorImpressions>0</ns2:ColorImpressions><ns2:TotalImpressions>1</ns2:TotalImpressions></ns0:UsageTotals><ns0:JobList><ns0:JobEntry><ns2:DriverJobDateTime /><ns2:DriverJobUserID /><ns2:DriverJobName /><ns2:DriverJobApplicationID>Internal Report</ns2:DriverJobApplicationID><ns2:MonochromeImpressions>1</ns2:MonochromeImpressions><ns2:ColorImpressions>0</ns2:ColorImpressions><ns2:TotalImpressions>1</ns2:TotalImpressions></ns0:JobEntry></ns0:JobList></ns0:ColorUsageJobLog></ns0:ProductLogsDyn>
