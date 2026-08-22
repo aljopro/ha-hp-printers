@@ -23,7 +23,7 @@ from custom_components.hp_printers.binary_sensor import (
     HPPrinterBinarySensor,
     async_setup_entry as binary_setup_entry,
 )
-from custom_components.hp_printers.models import SubunitUsage
+from custom_components.hp_printers.models import NetworkHealth, SubunitUsage
 from custom_components.hp_printers.sensor import (
     CONSUMABLE_SENSORS,
     PRINTER_SENSORS,
@@ -139,6 +139,21 @@ def test_printer_sensors_emit_expected_values() -> None:
         "assert_text": None,
     }
     assert sensors["last_event_page"].native_value == 1234
+    # One alertable number, with the individual counters attached.
+    assert sensors["network_errors"].native_value == 3
+    assert sensors["network_errors"].extra_state_attributes == {
+        "bad_packets_received": 1,
+        "framing_errors": 2,
+        "transmit_collisions": 0,
+        "transmit_late_collisions": 0,
+        "unsendable_packets": 0,
+        "port_type": "ethernet",
+        "link_mode": "100TX_FULL",
+    }
+    assert sensors["network_link_mode"].native_value == "100TX_FULL"
+    assert sensors["network_bad_packets"].native_value == 1
+    assert sensors["network_framing_errors"].native_value == 2
+    assert sensors["network_packets_received"].native_value == 758585
     assert sensors["last_job_source"].native_value == "AcmePrint"
     assert sensors["last_job_source"].extra_state_attributes == {
         "user": "jane",
@@ -161,6 +176,7 @@ def test_printer_sensors_drop_when_value_fn_returns_none() -> None:
             jobs=[],
             genuine_color_impressions=None,
             genuine_mono_impressions=None,
+            network=NetworkHealth(),
         ),
     )
 
@@ -174,6 +190,10 @@ def test_printer_sensors_drop_when_value_fn_returns_none() -> None:
     assert "last_job_source" not in sensors
     assert "genuine_color_pages" not in sensors
     assert "genuine_mono_pages" not in sensors
+    # A printer that does not serve IOConfigDyn grows no network entities.
+    assert "network_errors" not in sensors
+    assert "network_link_mode" not in sensors
+    assert "network_bad_packets" not in sensors
 
 
 def test_subunit_sensors_route_to_scanner_and_copier() -> None:

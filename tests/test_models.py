@@ -6,6 +6,7 @@ from custom_components.hp_printers.models import (
     Consumable,
     EventLogEntry,
     JobEntry,
+    NetworkHealth,
     PrinterData,
 )
 
@@ -108,3 +109,19 @@ def test_consumable_is_genuine_recognizes_brand_variants(brand: str) -> None:
     cartridge = Consumable(label_code="K", brand=brand)
 
     assert cartridge.is_genuine is True
+
+
+def test_network_health_totals_only_what_the_device_reports() -> None:
+    """Error counters add up, and stay unknown when nothing reports them."""
+    health = NetworkHealth(
+        bad_packets_received=2,
+        framing_errors=1,
+        transmit_collisions=None,
+    )
+
+    assert health.total_errors == 3
+    assert health.error_counts["transmit_collisions"] is None
+    # A device that reports no counters must not read as a healthy zero.
+    assert NetworkHealth().total_errors is None
+    # A device that reports them as zero must.
+    assert NetworkHealth(bad_packets_received=0).total_errors == 0

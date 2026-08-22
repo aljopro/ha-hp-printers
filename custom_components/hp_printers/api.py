@@ -20,6 +20,7 @@ from defusedxml import ElementTree as DefusedET
 from .const import (
     COLOR_NAMES,
     ENDPOINT_CONSUMABLE_CONFIG,
+    ENDPOINT_IO_CONFIG,
     ENDPOINT_PRODUCT_CONFIG,
     ENDPOINT_PRODUCT_LOGS,
     ENDPOINT_PRODUCT_STATUS,
@@ -29,6 +30,7 @@ from .models import (
     Consumable,
     EventLogEntry,
     JobEntry,
+    NetworkHealth,
     PrinterData,
     ProductInfo,
     SubunitUsage,
@@ -219,6 +221,19 @@ class LEDMClient:
 
         return _strip_namespaces(root)
 
+    async def _fetch_optional(self, endpoint: str) -> Element | None:
+        """GET a document the device may not serve at all.
+
+        Used for endpoints that are genuinely optional across models. A
+        failure here must not fail the whole update: the printer answered,
+        it simply has nothing to say about this resource.
+        """
+        try:
+            return await self._fetch(endpoint)
+        except HPPrinterError as error:
+            _LOGGER.debug("Optional endpoint %s unavailable: %s", endpoint, error)
+            return None
+
     async def async_get_product_info(self) -> ProductInfo:
         """Read static device information."""
         root = await self._fetch(ENDPOINT_PRODUCT_CONFIG)
@@ -254,11 +269,12 @@ class LEDMClient:
 
     async def async_get_data(self) -> PrinterData:
         """Fetch everything that changes, concurrently."""
-        status_doc, usage_doc, consumable_doc, logs_doc = await asyncio.gather(
+        status_doc, usage_doc, consumable_doc, logs_doc, io_doc = await asyncio.gather(
             self._fetch(ENDPOINT_PRODUCT_STATUS),
             self._fetch(ENDPOINT_PRODUCT_USAGE),
             self._fetch(ENDPOINT_CONSUMABLE_CONFIG),
             self._fetch(ENDPOINT_PRODUCT_LOGS),
+            self._fetch_optional(ENDPOINT_IO_CONFIG),
         )
 
         status_node = _find(status_doc, "Status")
@@ -285,6 +301,44 @@ class LEDMClient:
             ),
             genuine_color_impressions=_int(usage_doc, "OriginalHPColorImpressions"),
             genuine_mono_impressions=_int(usage_doc, "OriginalHPMonochromeImpressions"),
+            network=self._parse_network(io_doc),
+        )
+
+    def _parse_network(self, io_doc: Element | None) -> NetworkHealth:
+        """Parse the network adaptor's state and error counters.
+
+        A device reports one IOAdaptorConfig per connectivity port -- USB as
+        well as network -- and only one of them carries NetworkAdaptorConfig.
+        The port type is read from that block rather than from the first
+        match in the document, which on every capture seen so far is the USB
+        port and would report a networked printer as connected by USB.
+        """
+        if io_doc is None:
+            return NetworkHealth()
+
+        adaptor = None
+        port_type = None
+        for candidate in io_doc.iter("IOAdaptorConfig"):
+            if _find(candidate, "NetworkAdaptorConfig") is not None:
+                adaptor = _find(candidate, "NetworkAdaptorConfig")
+                port_type = _text(candidate, "DeviceConnectivityPortType")
+                break
+
+        stats = _find(io_doc, "NetworkStatistics")
+
+        return NetworkHealth(
+            port_type=port_type,
+            # NetworkStatus is repeated per IP version; they agree in
+            # practice, and the first is IPv4.
+            status=_text(adaptor, "NetworkStatus"),
+            link_mode=_text(adaptor, "SpeedDuplexNegotiationMode"),
+            packets_received=_int(stats, "TotalPacketsReceived"),
+            packets_transmitted=_int(stats, "TotalPacketsTransmitted"),
+            bad_packets_received=_int(stats, "BadPacketsReceived"),
+            framing_errors=_int(stats, "FramingErrorsReceived"),
+            transmit_collisions=_int(stats, "TransmitCollisions"),
+            transmit_late_collisions=_int(stats, "TransmitLateCollisions"),
+            unsendable_packets=_int(stats, "UnsendablePackets"),
         )
 
     def _parse_subunit(self, usage_doc: Element, subunit: str) -> SubunitUsage:

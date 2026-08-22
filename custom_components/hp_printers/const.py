@@ -28,6 +28,10 @@ ENDPOINT_PRODUCT_STATUS: Final = "/DevMgmt/ProductStatusDyn.xml"
 ENDPOINT_PRODUCT_USAGE: Final = "/DevMgmt/ProductUsageDyn.xml"
 ENDPOINT_CONSUMABLE_CONFIG: Final = "/DevMgmt/ConsumableConfigDyn.xml"
 ENDPOINT_PRODUCT_LOGS: Final = "/DevMgmt/ProductLogsDyn.xml"
+# Network adaptor configuration and error counters. Not every model
+# advertises it, so it is fetched tolerantly: a printer without it still
+# updates normally, it just grows no network entities.
+ENDPOINT_IO_CONFIG: Final = "/DevMgmt/IOConfigDyn.xml"
 
 # Endpoints fetched once at setup rather than on every poll.
 STATIC_ENDPOINTS: Final = (ENDPOINT_PRODUCT_CONFIG,)

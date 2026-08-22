@@ -132,6 +132,9 @@ fixture:
 - Printer HTTPS commonly uses a self-signed certificate and legacy static-RSA ciphers; use the existing `printer_ssl_context()` path rather than replacing it with default TLS settings.
 - The zeroconf-announced IPP port is not the LEDM web-server port; discovery deliberately uses the printer hostname with the configured HTTP/HTTPS web port.
 - Product and consumable fields can contain sentinel or historical values. Preserve the filtering and naming semantics in `api.py` and `models.py`, especially `PreviousCartridgeData`, which describes the cartridge removed from a slot rather than the installed cartridge.
+- `IOConfigDyn` is fetched through `_fetch_optional`, which swallows failures: not every model serves it, and a missing optional resource must not fail the whole update. Its `NetworkStatus` cannot report an outage -- the document is read over the adaptor it describes -- so it is never wired into availability; the error counters are the part worth having.
+- The network port type must be read from the `IOAdaptorConfig` that actually contains `NetworkAdaptorConfig`. The first one in the document is USB on every capture seen so far.
+- No network identity (hostname, IP, MAC) is parsed at all. The anonymizer scrubs those from fixtures, and nothing should start reading them into entities or diagnostics.
 - Diagnostics are intentionally redacted in `diagnostics.py`; do not expose host, serial, UUID, or user identifiers in new diagnostic output.
 
 ## Releases

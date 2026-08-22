@@ -98,6 +98,52 @@ class SubunitUsage:
 
 
 @dataclass(frozen=True, slots=True)
+class NetworkHealth:
+    """The printer's network adaptor state and its error counters.
+
+    ``status`` cannot report a network outage: the document is read over the
+    same adaptor it describes, so an unreachable printer fails the fetch
+    instead. What earns its place here are the error counters -- rising bad
+    packets or collisions are evidence of a failing cable or switch port,
+    which nothing else in LEDM reveals.
+    """
+
+    port_type: str | None = None
+    status: str | None = None
+    link_mode: str | None = None
+    packets_received: int | None = None
+    packets_transmitted: int | None = None
+    bad_packets_received: int | None = None
+    framing_errors: int | None = None
+    transmit_collisions: int | None = None
+    transmit_late_collisions: int | None = None
+    unsendable_packets: int | None = None
+
+    @property
+    def error_counts(self) -> dict[str, int | None]:
+        """Return the individual error counters, keyed for attributes."""
+        return {
+            "bad_packets_received": self.bad_packets_received,
+            "framing_errors": self.framing_errors,
+            "transmit_collisions": self.transmit_collisions,
+            "transmit_late_collisions": self.transmit_late_collisions,
+            "unsendable_packets": self.unsendable_packets,
+        }
+
+    @property
+    def total_errors(self) -> int | None:
+        """Return every error counter added together.
+
+        ``None`` when the device reports none of them, so no entity is
+        created rather than one that reads a misleading zero.
+        """
+        values = [value for value in self.error_counts.values() if value is not None]
+        if not values:
+            return None
+        return sum(values)
+
+
+@dataclass(frozen=True, slots=True)
 class EventLogEntry:
     """One entry from the device event log."""
 
@@ -139,6 +185,7 @@ class PrinterData:
     genuine_mono_impressions: int | None = None
     assert_text: str | None = None
     genuine_supplies_only: bool | None = None
+    network: NetworkHealth = field(default_factory=NetworkHealth)
 
     @property
     def last_job(self) -> JobEntry | None:

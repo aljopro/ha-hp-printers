@@ -19,11 +19,12 @@ from homeassistant.helpers.typing import StateType
 from .const import STATUS_OPTIONS
 from .coordinator import HPPrinterConfigEntry
 from .entity import HPConsumableEntity, HPPrinterEntity, HPSubunitEntity
-from .models import Consumable, PrinterData, ProductInfo
+from .models import Consumable, NetworkHealth, PrinterData, ProductInfo
 
 PARALLEL_UPDATES = 0
 
 PAGES = "pages"
+PACKETS = "packets"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,6 +59,28 @@ def _counter(
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data, _info: getter(data),
         subunit=subunit,
+    )
+
+
+def _network_counter(
+    key: str,
+    translation_key: str,
+    getter: Callable[[NetworkHealth], int | None],
+):
+    """Build a network counter, off by default.
+
+    These are packet counts, not pages: PACKETS rather than PAGES, and
+    diagnostic because they mean nothing to someone who is not chasing a
+    connectivity problem.
+    """
+    return HPPrinterSensorDescription(
+        key=key,
+        translation_key=translation_key,
+        native_unit_of_measurement=PACKETS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data, _info: getter(data.network),
     )
 
 
@@ -264,6 +287,62 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         value_fn=lambda data, _info: (
             data.last_event.impressions if data.last_event else None
         ),
+    ),
+    # --- diagnostics: network health ---
+    # The one entity of this group that is on by default: a single number to
+    # alert on, with the individual counters attached. A rising value means
+    # the link is degrading -- a marginal cable, a failing switch port -- and
+    # nothing else the printer exposes says so.
+    HPPrinterSensorDescription(
+        key="network_errors",
+        translation_key="network_errors",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data, _info: data.network.total_errors,
+        attrs_fn=lambda data: {
+            **data.network.error_counts,
+            "port_type": data.network.port_type,
+            "link_mode": data.network.link_mode,
+        },
+    ),
+    HPPrinterSensorDescription(
+        key="network_link_mode",
+        translation_key="network_link_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data, _info: data.network.link_mode,
+        attrs_fn=lambda data: {"port_type": data.network.port_type},
+    ),
+    _network_counter(
+        "network_bad_packets", "network_bad_packets", lambda n: n.bad_packets_received
+    ),
+    _network_counter(
+        "network_framing_errors", "network_framing_errors", lambda n: n.framing_errors
+    ),
+    _network_counter(
+        "network_transmit_collisions",
+        "network_transmit_collisions",
+        lambda n: n.transmit_collisions,
+    ),
+    _network_counter(
+        "network_late_collisions",
+        "network_late_collisions",
+        lambda n: n.transmit_late_collisions,
+    ),
+    _network_counter(
+        "network_unsendable_packets",
+        "network_unsendable_packets",
+        lambda n: n.unsendable_packets,
+    ),
+    _network_counter(
+        "network_packets_received",
+        "network_packets_received",
+        lambda n: n.packets_received,
+    ),
+    _network_counter(
+        "network_packets_transmitted",
+        "network_packets_transmitted",
+        lambda n: n.packets_transmitted,
     ),
     HPPrinterSensorDescription(
         key="last_job_source",

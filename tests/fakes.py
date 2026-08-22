@@ -16,6 +16,7 @@ from custom_components.hp_printers.models import (
     Consumable,
     EventLogEntry,
     JobEntry,
+    NetworkHealth,
     PrinterData,
     ProductInfo,
     SubunitUsage,
@@ -115,6 +116,18 @@ def make_printer_data(**overrides: Any) -> PrinterData:
         "genuine_mono_impressions": 800,
         "assert_text": None,
         "genuine_supplies_only": False,
+        "network": NetworkHealth(
+            port_type="ethernet",
+            status="ready",
+            link_mode="100TX_FULL",
+            packets_received=758585,
+            packets_transmitted=167260,
+            bad_packets_received=1,
+            framing_errors=2,
+            transmit_collisions=0,
+            transmit_late_collisions=0,
+            unsendable_packets=0,
+        ),
     }
     fields.update(overrides)
     return PrinterData(**fields)

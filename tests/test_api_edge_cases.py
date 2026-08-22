@@ -19,7 +19,13 @@ from custom_components.hp_printers.api import (
     _int,
     _strip_namespaces,
 )
-from custom_components.hp_printers.models import SubunitUsage
+from custom_components.hp_printers.const import (
+    ENDPOINT_CONSUMABLE_CONFIG,
+    ENDPOINT_PRODUCT_LOGS,
+    ENDPOINT_PRODUCT_STATUS,
+    ENDPOINT_PRODUCT_USAGE,
+)
+from custom_components.hp_printers.models import NetworkHealth, SubunitUsage
 
 
 def _xml(body: str):
@@ -187,3 +193,38 @@ async def test_validate_rejects_a_device_without_a_serial() -> None:
     body = "<ProductConfigDyn><ProductInformation/></ProductConfigDyn>"
     with pytest.raises(HPPrinterParseError):
         await _client_with(_FakeResponse(body)).async_validate()
+
+
+async def test_optional_endpoint_absence_does_not_fail_the_update() -> None:
+    """A model that does not serve IOConfigDyn still updates normally."""
+    client = LEDMClient(session=None, host="printer.local", port=80, use_ssl=False)
+    docs = {
+        ENDPOINT_PRODUCT_STATUS: _xml(
+            "<ProductStatusDyn><Status><StatusCategory>ready</StatusCategory>"
+            "</Status></ProductStatusDyn>"
+        ),
+        ENDPOINT_PRODUCT_USAGE: _xml("<ProductUsageDyn/>"),
+        ENDPOINT_CONSUMABLE_CONFIG: _xml("<ConsumableConfigDyn/>"),
+        ENDPOINT_PRODUCT_LOGS: _xml("<ProductLogsDyn/>"),
+    }
+
+    async def fetch(endpoint: str):
+        if endpoint not in docs:
+            raise HPPrinterConnectionError(f"404 for {endpoint}")
+        return docs[endpoint]
+
+    client._fetch = fetch  # noqa: SLF001
+
+    data = await client.async_get_data()
+
+    assert data.status == "ready"
+    # No network data, and therefore no network entities -- not an error.
+    assert data.network.total_errors is None
+    assert data.network.port_type is None
+
+
+async def test_parse_network_handles_a_missing_document() -> None:
+    """``_parse_network(None)`` is the no-data case, not a crash."""
+    client = LEDMClient(session=None, host="printer.local", port=80, use_ssl=False)
+
+    assert client._parse_network(None) == NetworkHealth()  # noqa: SLF001

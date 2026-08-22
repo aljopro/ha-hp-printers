@@ -141,6 +141,33 @@
       },
       "scan_job_duplex_sheets": {
         "default": "mdi:book-open-page-variant-outline"
+      },
+      "network_errors": {
+        "default": "mdi:lan-disconnect"
+      },
+      "network_link_mode": {
+        "default": "mdi:lan-connect"
+      },
+      "network_bad_packets": {
+        "default": "mdi:package-variant-closed-remove"
+      },
+      "network_framing_errors": {
+        "default": "mdi:alert-octagon-outline"
+      },
+      "network_transmit_collisions": {
+        "default": "mdi:call-split"
+      },
+      "network_late_collisions": {
+        "default": "mdi:call-split"
+      },
+      "network_unsendable_packets": {
+        "default": "mdi:package-variant-closed-remove"
+      },
+      "network_packets_received": {
+        "default": "mdi:download-network-outline"
+      },
+      "network_packets_transmitted": {
+        "default": "mdi:upload-network-outline"
       }
     },
     "binary_sensor": {

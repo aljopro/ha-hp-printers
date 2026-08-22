@@ -20,6 +20,7 @@ from defusedxml import ElementTree as DefusedET
 from custom_components.hp_printers.api import LEDMClient, _find, _strip_namespaces
 from custom_components.hp_printers.const import (
     ENDPOINT_CONSUMABLE_CONFIG,
+    ENDPOINT_IO_CONFIG,
     ENDPOINT_PRODUCT_CONFIG,
     ENDPOINT_PRODUCT_LOGS,
     ENDPOINT_PRODUCT_STATUS,
@@ -196,3 +197,14 @@ def test_m182nw_fixture_pins_known_values() -> None:
     assert copier.adf_images is None
     assert copier.flatbed_images is None
     assert copier.total_impressions == 35
+
+    network = client._parse_network(_load(ENDPOINT_IO_CONFIG, host_dir))  # noqa: SLF001
+
+    # Despite the "nw" in M182nw, this one is on the wire.
+    assert network.port_type == "ethernet"
+    assert network.link_mode == "100TX_FULL"
+    assert network.status == "ready"
+    # A clean link: every error counter reports, and all of them are zero.
+    assert network.total_errors == 0
+    assert all(value == 0 for value in network.error_counts.values())
+    assert network.packets_received > 0

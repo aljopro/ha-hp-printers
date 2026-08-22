@@ -11,7 +11,7 @@ cartridges are independently replaceable and have their own serial numbers.
 Depending on what the model reports, the integration exposes:
 
 - **Printer**: status, page counters, jams, mispicks, firmware build date,
-  event log, and diagnostic state.
+  event log, network link health, and diagnostic state.
 - **Scanner and copier**: their own counters, when those capabilities exist.
 - **Cartridges**: level, pages remaining, pages printed, part and serial
   information, dates, genuine/clone status, and problem state.
@@ -119,6 +119,9 @@ device page.
 | Power save timeout | sensor (diagnostic, disabled by default) | The sleep delay the printer is configured to use. |
 | Language pack version | sensor (diagnostic, disabled by default) | The revision of the language pack. |
 | Last job source | sensor (diagnostic, disabled by default) | Application that initiated the most recent print job, with user, name, and page count attached as attributes. |
+| Network errors | sensor (diagnostic) | Every network error counter added together — bad packets, framing errors, collisions, late collisions, unsendable packets — with each one attached as an attribute, along with the port type and link mode. A rising value means the link is degrading: a marginal cable or a failing switch port. Nothing else the printer exposes says so. Absent on models that do not serve `IOConfigDyn`. |
+| Link mode | sensor (diagnostic, disabled by default) | Negotiated speed and duplex, e.g. `100TX_FULL`. |
+| Bad packets received, Framing errors, Transmit collisions, Late collisions, Unsendable packets, Packets received, Packets transmitted | sensor (diagnostic, disabled by default) | The individual counters behind **Network errors**, for when one number is not enough. |
 | Firmware fault recorded | binary_sensor (diagnostic) | `on` when the printer still has assert text from a recorded firmware crash. This is a *recorded* fault, not a live one — to catch new faults, trigger on the last event code changing. |
 | Genuine supplies enforced | binary_sensor (diagnostic) | `on` when the printer refuses third-party cartridges. A firmware update can switch this back on and stop a working printer. |
 | Admin password set | binary_sensor (diagnostic) | `on` when the EWS admin password is configured. It gates *writes* only — LEDM reads stay open either way, which is why this integration needs no credentials. |

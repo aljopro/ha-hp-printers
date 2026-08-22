@@ -189,6 +189,33 @@
       "last_event_page": {
         "name": "Last event at page"
       },
+      "network_errors": {
+        "name": "Network errors"
+      },
+      "network_link_mode": {
+        "name": "Link mode"
+      },
+      "network_bad_packets": {
+        "name": "Bad packets received"
+      },
+      "network_framing_errors": {
+        "name": "Framing errors"
+      },
+      "network_transmit_collisions": {
+        "name": "Transmit collisions"
+      },
+      "network_late_collisions": {
+        "name": "Late collisions"
+      },
+      "network_unsendable_packets": {
+        "name": "Unsendable packets"
+      },
+      "network_packets_received": {
+        "name": "Packets received"
+      },
+      "network_packets_transmitted": {
+        "name": "Packets transmitted"
+      },
       "last_job_source": {
         "name": "Last job source"
       },

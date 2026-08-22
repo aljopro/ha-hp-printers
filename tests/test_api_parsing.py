@@ -129,8 +129,29 @@ async def test_async_get_data_parses_full_response() -> None:
         """
     )
 
+    io_config = _xml(
+        """
+        <IOConfigDyn>
+          <IOAdaptorConfig>
+            <DeviceConnectivityPortType>usb</DeviceConnectivityPortType>
+          </IOAdaptorConfig>
+          <IOAdaptorConfig>
+            <DeviceConnectivityPortType>ethernet</DeviceConnectivityPortType>
+            <NetworkAdaptorConfig>
+              <NetworkStatus>ready</NetworkStatus>
+              <SpeedDuplexNegotiationMode>100TX_FULL</SpeedDuplexNegotiationMode>
+            </NetworkAdaptorConfig>
+            <NetworkStatistics>
+              <BadPacketsReceived>3</BadPacketsReceived>
+              <TotalPacketsReceived>1000</TotalPacketsReceived>
+            </NetworkStatistics>
+          </IOAdaptorConfig>
+        </IOConfigDyn>
+        """
+    )
+
     client._fetch = AsyncMock(  # noqa: SLF001
-        side_effect=[status, usage, consumable, logs]
+        side_effect=[status, usage, consumable, logs, io_config]
     )
 
     data = await client.async_get_data()
@@ -141,6 +162,12 @@ async def test_async_get_data_parses_full_response() -> None:
     assert data.printer.jam_events == 1
     assert data.scanner.scan_images is None  # field absent in the response
     assert data.scan.flatbed_images == 7
+    # The port type comes from the adaptor that actually has a network
+    # configuration, not from the first one in the document -- which is USB.
+    assert data.network.port_type == "ethernet"
+    assert data.network.link_mode == "100TX_FULL"
+    assert data.network.bad_packets_received == 3
+    assert data.network.packets_received == 1000
     assert data.copy.total_impressions == 5
     assert data.genuine_color_impressions == 50
     assert data.genuine_mono_impressions == 100
