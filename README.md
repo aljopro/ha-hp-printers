@@ -294,9 +294,11 @@ Two ways to share it safely:
    matching `entity:` block in `strings.json` for any new or renamed
    user-visible entity.
 6. Use the **Pull request** template; label the PR with `bug`, `enhancement`,
-   `documentation`, `breaking`, or `chore` so release-drafter categorises it
-   correctly.
-7. CI must be green on the PR before review.
+   `documentation`, `breaking`, or `chore`. Labels group the change in the
+   generated release notes.
+7. CI must be green on the PR before review. Do not bump the version in
+   `manifest.json` — that is what cuts a release, and it is done separately
+   from merging your change.
 
 ## License
 

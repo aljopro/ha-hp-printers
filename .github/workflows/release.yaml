@@ -1,0 +1,65 @@
+# Cuts a release when the version in manifest.json changes.
+#
+# The manifest version is the source of truth: Home Assistant requires a
+# custom integration's manifest version to match its release, so deriving
+# the tag from the manifest makes the two incapable of disagreeing.
+#
+# To release: bump "version" in custom_components/hp_printers/manifest.json
+# and push to main. Nothing else. If that version already has a release,
+# this job does nothing, so ordinary commits are free.
+#
+# It runs after CI rather than on push, so a red commit is never released.
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Check out the exact commit CI passed on, not whatever main
+          # points at now.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Read the manifest version
+        id: manifest
+        run: |
+          version=$(python -c "import json;print(json.load(open('custom_components/hp_printers/manifest.json'))['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Manifest version: $version"
+
+      - name: Check whether it is already released
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.manifest.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "$TAG is already released; nothing to do."
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create the release
+        if: steps.existing.outputs.released == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.manifest.outputs.version }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          gh release create "$TAG" \
+            --target "$SHA" \
+            --title "$TAG" \
+            --generate-notes

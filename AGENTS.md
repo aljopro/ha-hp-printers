@@ -156,6 +156,8 @@ Two rules the anonymizer has already been bitten by:
 
 ## Releases
 
-- Cut a release by pushing a `vX.Y.Z` tag that matches `manifest.json` `version`, then **publish** the draft release-drafter has been maintaining. HACS reads published releases; a draft or a bare tag is invisible to it.
-- `.github/workflows/hacs.yaml` runs `hacs/action@main`, the same validator HACS uses to review a submission to `hacs/default`. It runs on every push, on PRs, and nightly -- not at tag time, because a release-time failure is discovered too late to be useful.
-- Label PRs so release-drafter categorizes them correctly: `breaking`, `enhancement`, `bug`, `documentation`, or `chore`.
+- **Bump `version` in `custom_components/hp_printers/manifest.json` and push to main. That is the whole release process.** `.github/workflows/release.yaml` runs after CI succeeds, derives the tag from the manifest, and publishes `vX.Y.Z` with generated notes. A push whose manifest version is already released does nothing, so ordinary commits are free.
+- The manifest version is deliberately the source of truth: Home Assistant requires a custom integration's manifest version to match its release, and deriving the tag from the manifest makes the two incapable of disagreeing.
+- Releasing is gated on CI passing, on the exact commit CI passed on -- not on whatever `main` points at by the time the job runs.
+- HACS reads **published** releases. A draft or a bare tag is invisible to it.
+- release-drafter was removed: it categorises merged pull requests, and this repository commits directly to `main`, so it produced empty drafts. If the workflow ever moves to PRs, it is worth restoring.
