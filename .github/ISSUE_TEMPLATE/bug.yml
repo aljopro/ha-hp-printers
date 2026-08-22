@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a problem with the HP Printers integration
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      options:
+        - 2026.8.2 or newer
+        - 2025.x
+        - 2024.x
+        - Older
+    validations:
+      required: true
+  - type: input
+    id: printer
+    attributes:
+      label: Printer model
+      placeholder: HP Color LaserJet MFP M182nw
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Printer firmware date
+      description: Found under the Firmware date sensor in Home Assistant
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Enable debug logging for custom_components.hp_printers and paste the output.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics file
+      description: Download from Devices & Services → HP Printers → ⋮ → Download diagnostics, then attach.

@@ -1,0 +1,10 @@
+name: Support question
+description: Ask a question about the HP Printers integration
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true

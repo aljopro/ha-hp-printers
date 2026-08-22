@@ -1,0 +1,19 @@
+name: Feature request
+description: Suggest a new entity or capability
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How would you propose implementing it?
+  - type: input
+    id: printer
+    attributes:
+      label: Printer model (if model-specific)
