@@ -17,6 +17,7 @@
 - The test stack is a single pin: `pytest-homeassistant-custom-component==0.13.356`, which transitively fixes `homeassistant==2026.8.2`, `pytest==9.0.3` and `pytest-asyncio==1.4.0`. Do not pin pytest or pytest-asyncio separately in `requirements_test.txt`; a separate pin conflicts with what this package requires and breaks CI while local runs stay green.
 - The suite requires Python 3.14, which that package's Home Assistant pin also requires.
 - `ruff_ha.toml` is extracted from Home Assistant core but **diverges deliberately in one place**: `known-first-party` is `["custom_components", "tests", "scripts"]`, not `["homeassistant"]`. Core builds the `homeassistant` package; here it is a dependency. Left as core had it, isort groups `custom_components` with third-party imports and CI fails on ordering. Re-apply this if the file is ever re-extracted.
+- `.pre-commit-config.yaml` runs the same lint, format, test and JSON-parse checks against this venv. Install with `./.venv/bin/uv pip install --python .venv/bin/python pre-commit && ./.venv/bin/pre-commit install`. The hooks are `repo: local` on purpose: the upstream Ruff mirror pins its own Ruff version, which would disagree with the one CI uses.
 - Lint and format **`scripts` as well as `custom_components/hp_printers` and `tests`** — CI does, and a check that omits a directory hides real errors in it.
 
 ## Test Policy

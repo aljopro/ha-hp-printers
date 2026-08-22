@@ -249,23 +249,27 @@ printer to confirm the field.
 ### Opening a pull request
 
 1. Fork the repository and create a branch from `main`.
-2. Make the change. Run the verification commands from `AGENTS.md`:
+2. Optionally install the hooks so the checks run on every commit:
+   `./.venv/bin/uv pip install --python .venv/bin/python pre-commit` then
+   `./.venv/bin/pre-commit install`. The hooks are the CI commands, run
+   against this repository's venv.
+3. Make the change. Run the verification commands from `AGENTS.md`:
    - `./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests`
    - `./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests`
    - `./.venv/bin/python -m compileall -q custom_components/hp_printers tests`
    - `./.venv/bin/python -m pytest -q`
-3. **Any change that alters functionality must ship with tests.** A bug fix
+4. **Any change that alters functionality must ship with tests.** A bug fix
    gets a regression test, a new entity gets coverage of the parser path and
    the entity description it depends on, and a refactor keeps the existing
    tests green. A PR that changes behaviour without touching `tests/` will
    be asked to add tests before it can merge.
-4. Update `custom_components/hp_printers/translations/en.json` and the
+5. Update `custom_components/hp_printers/translations/en.json` and the
    matching `entity:` block in `strings.json` for any new or renamed
    user-visible entity.
-5. Use the **Pull request** template; label the PR with `bug`, `enhancement`,
+6. Use the **Pull request** template; label the PR with `bug`, `enhancement`,
    `documentation`, `breaking`, or `chore` so release-drafter categorises it
    correctly.
-6. CI must be green on the PR before review.
+7. CI must be green on the PR before review.
 
 ## License
 

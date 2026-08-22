@@ -1,0 +1,41 @@
+# Runs the same checks as .github/workflows/ci.yaml, against the same
+# repository venv, so a commit that passes here passes CI. Local hooks are
+# used deliberately rather than the upstream ruff mirror: CI pins Ruff's
+# behaviour through ruff_ha.toml and the venv, and a second, differently
+# versioned Ruff would disagree with it.
+#
+#   ./.venv/bin/uv pip install --python .venv/bin/python pre-commit
+#   ./.venv/bin/pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff lint
+        entry: ./.venv/bin/ruff check --config ruff_ha.toml --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: Ruff format
+        entry: ./.venv/bin/ruff format --config ruff_ha.toml --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: pytest
+        name: pytest
+        entry: ./.venv/bin/python -m pytest -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      # manifest.json, strings.json, icons.json and the translations are
+      # hand-edited often enough that a stray comma is worth catching before
+      # hassfest does. json.tool takes a single file, so parse them directly.
+      - id: json-syntax
+        name: Check JSON syntax
+        entry: ./.venv/bin/python -c "import json,sys;[json.load(open(f)) for f in sys.argv[1:]]"
+        language: system
+        files: \.json$
