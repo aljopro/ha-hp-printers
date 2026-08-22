@@ -43,4 +43,9 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics file
-      description: Download from Devices & Services → HP Printers → ⋮ → Download diagnostics, then attach.
+      description: >-
+        Download from Devices & Services → HP Printers → ⋮ → Download
+        diagnostics, then attach. Diagnostics are already redacted. If you
+        attach raw LEDM XML instead, run it through
+        scripts/anonymize_ledm.py first — raw responses contain your
+        serial number, hostname, MAC and IP addresses.

@@ -244,10 +244,34 @@ network.
 
 Open an issue using the **Feature request** template. LEDM is undocumented,
 so the most useful contributions are *evidence first*: capture the relevant
-endpoint response from your printer (a `curl` against the EWS, or a snippet
-from the diagnostics file) and describe what you would surface from it. A
-feature without the source data usually has to wait for someone with the same
-printer to confirm the field.
+endpoint response from your printer and describe what you would surface from
+it. A feature without the source data usually has to wait for someone with
+the same printer to confirm the field.
+
+> [!IMPORTANT]
+> **Raw LEDM XML identifies your device and your network** — serial number,
+> UUID, hostname, MAC address, IP addresses, and your cartridges' serial
+> numbers. Do not paste a raw `curl` response into a public issue.
+
+Two ways to share it safely:
+
+- **Diagnostics file** (easiest): Devices & Services → HP Printers → ⋮ →
+  Download diagnostics. Already redacted, and it carries the parsed LEDM
+  payloads.
+- **Anonymized capture** (best, if you can run Python on your network):
+
+  ```bash
+  ./.venv/bin/python scripts/capture_ledm.py --host <your-printer>
+  ./.venv/bin/python scripts/anonymize_ledm.py scripts/captures/<dir>/
+  ```
+
+  The first is read-only — every request is a `GET`. The second replaces
+  identifiers with stable dummies and prints every replacement it makes.
+  Read that output before you attach anything: it is a best-effort filter
+  over the fields we know about, not a guarantee about a model we have
+  never seen. Anonymized captures are also what `tests/fixtures/` is made
+  of, so a good one can ship as a permanent regression test for your
+  model.
 
 ### Opening a pull request
 

@@ -17,3 +17,15 @@ body:
     id: printer
     attributes:
       label: Printer model (if model-specific)
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Supporting LEDM data
+      description: >-
+        LEDM is undocumented, so a feature usually needs evidence that the
+        field exists. Do NOT paste a raw curl response: it contains your
+        printer's serial number, UUID, hostname, MAC and IP addresses.
+        Attach the diagnostics file (Devices & Services -> HP Printers ->
+        Download diagnostics, already redacted), or run
+        scripts/capture_ledm.py followed by scripts/anonymize_ledm.py and
+        attach the -anon output after reading what it replaced.

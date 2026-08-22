@@ -10,8 +10,33 @@ Usage:
     ./.venv/bin/python scripts/anonymize_ledm.py scripts/captures/192.168.0.64-20260101T120000Z/
 
 The output directory is created next to the input with the suffix
-``-anon``. Review the diff before committing; the script logs every
-replacement it makes so you can see what changed.
+``-anon``. The script prints every replacement it makes.
+
+What it removes
+---------------
+
+- Device identity: serial number, UUID, ServiceID, SKU, friendly name.
+- Cartridge identity: per-cartridge serial numbers.
+- Network identity: every spelling of the hostname, the MAC in both
+  ``HardwareAddress`` and the Bonjour service name, IPv4 and IPv6
+  addresses (validated as addresses, so an enum such as ``100TX_FULL``
+  survives), and the domain name.
+- ``ProductNumber`` becomes the captured ``MakeAndModel``, so the fixture
+  still says what device it came from without carrying the SKU.
+
+What it deliberately keeps
+--------------------------
+
+Counters, dates, states, capabilities, and the netmask. A fixture is
+worthless if the values are scrubbed too, and none of these identify
+anyone.
+
+**This is a best-effort filter over tag names we have seen.** It cannot
+know about a field on a model nobody has captured yet. Read the output
+diff before committing, and if a new endpoint is added to
+``capture_ledm.py``, go through its identity fields, add them to
+``IDENTIFIER_TAGS``, and cover them in ``tests/test_anonymize.py`` --
+the network fields were added exactly that way.
 """
 
 import argparse

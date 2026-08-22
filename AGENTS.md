@@ -125,6 +125,23 @@ fixture:
    and commit. The fixture tests will pick it up automatically.
 4. The capture is read-only -- every request is a `GET`.
 
+**Adding an endpoint to `capture_ledm.py` means auditing it for identity
+fields.** Walk the new document, add every identifier tag to
+`IDENTIFIER_TAGS` in `anonymize_ledm.py`, and add a case to
+`tests/test_anonymize.py` asserting the raw value does not survive. The
+anonymizer is a filter over tag names we have seen; it cannot infer a
+field it has never met. `IOConfigDyn` needed four spellings of the
+hostname plus the MAC in two places.
+
+Two rules the anonymizer has already been bitten by:
+
+- `main()` must not reimplement the pipeline. It calls `anonymize_file`,
+  which is the only place the pipeline exists -- a second copy silently
+  reverted a fix once already.
+- A tag replaced by `IDENTIFIER_TAGS` is not then run through the
+  free-text patterns, or the placeholder gets rewritten again (a netmask
+  became an IP address that way).
+
 ## Device/API Traps
 
 - The integration never writes to the printer. Preserve read-only `GET` behavior.
