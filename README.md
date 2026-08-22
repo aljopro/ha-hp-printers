@@ -296,9 +296,10 @@ Two ways to share it safely:
 6. Use the **Pull request** template; label the PR with `bug`, `enhancement`,
    `documentation`, `breaking`, or `chore`. Labels group the change in the
    generated release notes.
-7. CI must be green on the PR before review. Do not bump the version in
-   `manifest.json` — that is what cuts a release, and it is done separately
-   from merging your change.
+7. CI must be green on the PR before review. Do not touch `version` in
+   `manifest.json`: releases are cut automatically on merge, using Home
+   Assistant's `YEAR.MONTH.RELEASE` scheme, and the workflow sets that
+   field itself.
 
 ## License
 

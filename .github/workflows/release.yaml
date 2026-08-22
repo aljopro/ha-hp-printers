@@ -1,12 +1,15 @@
-# Cuts a release when the version in manifest.json changes.
+# Releases on merge to main, using Home Assistant's calendar versioning:
+# YEAR.MONTH.RELEASE, where RELEASE counts from 0 within each month --
+# 2026.8.0, 2026.8.1, then 2026.9.0 when the month turns over.
 #
-# The manifest version is the source of truth: Home Assistant requires a
-# custom integration's manifest version to match its release, so deriving
-# the tag from the manifest makes the two incapable of disagreeing.
+# The version is computed here rather than edited by hand, because a
+# calendar version is derivable: the date plus how many releases this month
+# already has. The job writes it into manifest.json, commits, tags and
+# publishes.
 #
-# To release: bump "version" in custom_components/hp_printers/manifest.json
-# and push to main. Nothing else. If that version already has a release,
-# this job does nothing, so ordinary commits are free.
+# A release is cut only when something under custom_components/ changed
+# since the last release. Documentation, CI and test-only commits ship
+# nothing to a user, so they do not get a version.
 #
 # It runs after CI rather than on push, so a red commit is never released.
 name: Release
@@ -27,39 +30,83 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Check out the exact commit CI passed on, not whatever main
-          # points at now.
+          # The exact commit CI passed on, not whatever main points at now.
           ref: ${{ github.event.workflow_run.head_sha }}
+          # Full history and tags: the job diffs against the last release.
           fetch-depth: 0
 
-      - name: Read the manifest version
-        id: manifest
-        run: |
-          version=$(python -c "import json;print(json.load(open('custom_components/hp_printers/manifest.json'))['version'])")
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Manifest version: $version"
-
-      - name: Check whether it is already released
-        id: existing
+      - name: Decide whether there is anything to release
+        id: changed
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ steps.manifest.outputs.version }}
         run: |
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "released=true" >> "$GITHUB_OUTPUT"
-            echo "$TAG is already released; nothing to do."
+          last=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+          if [ -z "$last" ]; then
+            echo "No previous release; releasing."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --quiet "$last" HEAD -- custom_components/; then
+            echo "No integration changes since $last; nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
           else
-            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "Integration changed since $last; releasing."
+            echo "release=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create the release
-        if: steps.existing.outputs.released == 'false'
+      - name: Compute the calendar version
+        id: version
+        if: steps.changed.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ steps.manifest.outputs.version }}
-          SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          gh release create "$TAG" \
-            --target "$SHA" \
-            --title "$TAG" \
+          month=$(date -u +%Y.%-m)
+          # Highest RELEASE already used this month, or -1 if the month is new.
+          highest=$(gh release list --limit 100 --json tagName --jq \
+            '[.[].tagName | select(startswith("v'"$month"'."))] | .[]' \
+            | sed "s/^v${month}\.//" | sort -n | tail -1)
+          next=$(( ${highest:--1} + 1 ))
+          version="${month}.${next}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Next version: $version"
+
+      - name: Write the version into the manifest
+        if: steps.changed.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("custom_components/hp_printers/manifest.json")
+          manifest = json.loads(path.read_text())
+          manifest["version"] = os.environ["VERSION"]
+          path.write_text(json.dumps(manifest, indent=2) + "\n")
+          PY
+
+      - name: Commit, tag and publish
+        if: steps.changed.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/hp_printers/manifest.json
+          # The manifest may already carry this version -- someone can set it
+          # by hand, and the first calendar release did. Committing nothing
+          # is an error, so only commit when there is a change.
+          if git diff --cached --quiet; then
+            echo "Manifest already reads $VERSION; tagging as-is."
+          else
+            # [skip ci] keeps this commit from starting another CI run,
+            # which would trigger this workflow again.
+            git commit -m "Release $VERSION [skip ci]"
+            git push origin HEAD:main
+          fi
+          gh release create "v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
+            --title "v$VERSION" \
             --generate-notes

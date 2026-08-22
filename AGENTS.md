@@ -156,8 +156,11 @@ Two rules the anonymizer has already been bitten by:
 
 ## Releases
 
-- **Bump `version` in `custom_components/hp_printers/manifest.json` and push to main. That is the whole release process.** `.github/workflows/release.yaml` runs after CI succeeds, derives the tag from the manifest, and publishes `vX.Y.Z` with generated notes. A push whose manifest version is already released does nothing, so ordinary commits are free.
-- The manifest version is deliberately the source of truth: Home Assistant requires a custom integration's manifest version to match its release, and deriving the tag from the manifest makes the two incapable of disagreeing.
-- Releasing is gated on CI passing, on the exact commit CI passed on -- not on whatever `main` points at by the time the job runs.
-- HACS reads **published** releases. A draft or a bare tag is invisible to it.
+- **Versioning is Home Assistant's own: `YEAR.MONTH.RELEASE`** -- `2026.8.0`, `2026.8.1`, then `2026.9.0` when the month turns over. The month is not zero-padded and `RELEASE` counts from 0 within each month. `tests/test_manifest.py` pins the format.
+- **Releases are automatic.** `.github/workflows/release.yaml` runs after CI succeeds on `main`, computes the next calendar version, writes it into `manifest.json`, commits, tags and publishes. Nothing to bump by hand.
+- A release is cut only when something under `custom_components/` changed since the last release. Documentation, CI and test-only commits ship nothing to a user and get no version.
+- The release commit carries `[skip ci]`, which is what stops it triggering CI and looping back into this workflow. Do not remove it.
+- Releases are cut from the exact commit CI passed on, not from whatever `main` points at when the job runs.
+- HACS reads **published** releases. A draft or a bare tag is invisible to it, and a draft that was never tagged only appears on the repository's Releases page, not at any tag URL.
 - release-drafter was removed: it categorises merged pull requests, and this repository commits directly to `main`, so it produced empty drafts. If the workflow ever moves to PRs, it is worth restoring.
+- Versions before `2026.8.0` used semver (`v0.1.0`). The calendar scheme sorts above them, so the switch needed no special handling.
