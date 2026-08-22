@@ -1,0 +1,68 @@
+rules:
+  config_flow: done
+  config-flow-test-coverage: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-configuration-parameters: done
+  docs-troubleshooting: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  dependency-transparency: done
+  entity-event-setup: done
+  config-entry-unloading: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage: todo
+  devices: done
+  diagnostics: done
+  discovery: done
+  entity-category: done
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  action-setup:
+    status: exempt
+    comment: No service actions are exposed.
+  docs-actions:
+    status: exempt
+    comment: No service actions are exposed.
+  docs-triggers:
+    status: exempt
+    comment: No triggers are exposed.
+  docs-conditions:
+    status: exempt
+    comment: No conditions are exposed.
+  docs-examples:
+    status: exempt
+    comment: Example automations belong in a follow-up; not required for current tier.
+  docs-use-cases:
+    status: exempt
+    comment: Use cases are summarized in the README.
+  discovery-update-info: done
+  dynamic-devices: done
+  entity-device-class: done
+  repair-issues:
+    status: exempt
+    comment: No flows require user repair.
+  stale-devices:
+    status: exempt
+    comment: Cartridges can come and go, but are model-driven, not user-driven.
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
