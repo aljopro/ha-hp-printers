@@ -10,15 +10,17 @@ jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.14"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        # setup-uv dropped floating major tags in v8, so this is pinned to an
+        # exact release and has to be bumped deliberately.
+        uses: astral-sh/setup-uv@v10.0.1
 
       - name: Install dependencies
         run: |
@@ -41,7 +43,7 @@ jobs:
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Run hassfest
         uses: home-assistant/actions/hassfest@master
