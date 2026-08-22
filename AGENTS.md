@@ -16,6 +16,19 @@
 - Ruff is configured for Home Assistant conventions in `ruff_ha.toml`; do not substitute an ambient Ruff/Python version when the repository venv is available.
 - `pytest-asyncio` is pinned to `>=0.24,<1.0` for compatibility with the bundled Home Assistant test tooling; using a newer version will break imports inside HA's recorder fixtures.
 
+## Test Policy
+
+- **Any change that alters functionality must ship with tests.** A bug fix
+  needs a regression test for the case it fixes; a new entity needs coverage
+  of the parser path and the entity description that exposes it; a refactor
+  must keep the existing suite green.
+- The unit suite in `tests/` covers LEDM parsing in `api.py` and the
+  config-flow normalization in `config_flow.py`. New behaviour should land
+  in those modules (or a new sibling) and a matching test should appear
+  alongside it.
+- Do not delete a test to make a change pass. If a test is wrong, fix the
+  test and explain why in the commit message.
+
 ## Architecture
 
 - `api.py` is a read-only LEDM client; it fetches XML from the printer's `/DevMgmt/*` endpoints and maps it into immutable dataclasses in `models.py`.

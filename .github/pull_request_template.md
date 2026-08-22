@@ -14,7 +14,17 @@ body:
       options:
         - label: I ran `./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests` and it passed
         - label: I ran `./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests` and it passed
+        - label: I ran `./.venv/bin/python -m compileall -q custom_components/hp_printers tests` and it passed
         - label: I ran `./.venv/bin/python -m pytest -q` and it passed
+  - type: checkboxes
+    id: tests
+    attributes:
+      label: Test coverage
+      description: Functional changes must ship with tests. Confirm one of the following.
+      options:
+        - label: This PR adds new functionality and includes a test in `tests/`
+        - label: This PR fixes a bug and includes a regression test in `tests/`
+        - label: This PR is documentation, CI, or a refactor with no behaviour change, and the existing tests still cover it
   - type: dropdown
     id: change
     attributes:

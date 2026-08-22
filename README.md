@@ -16,25 +16,32 @@ Depending on what the model reports, the integration exposes:
 - **Cartridges**: level, pages remaining, pages printed, part and serial
   information, dates, genuine/clone status, and problem state.
 
-See [Devices](#devices) for the full list.
+See [Entities](#entities) for the full list.
 
 ## Why this one
 
-Because the interesting data was going unused. Alongside the usual toner levels
-and page counts, this exposes:
+I started this integration because I wanted to **name my printer**. The
+existing options created entity IDs like
+`sensor.hp_color_laserjet_mfp_m182nw_192_168_0_64_status`, and there was no way
+to clean them up short of manually renaming every entity in Home Assistant.
+Setting a friendly name during setup, and having every entity ID follow that
+name, was the original goal.
 
-| Entity | What it tells you |
-|---|---|
-| **Last event code** | The printer's own fault log — `13.x` paper jams, `49.x` firmware faults, `10.x` supply-memory errors. The full history and any firmware assert text ride along as attributes. |
-| **Firmware fault recorded** | Whether the printer has stored a firmware crash. |
-| **Firmware date** | The build date of the installed firmware — the only version marker LEDM offers. |
-| **Genuine supplies enforced** | Whether the printer will refuse third-party cartridges. Worth watching: a firmware update can switch this back on and stop a working printer. |
-| **Genuine** *(per cartridge)* | Whether HP considers each cartridge genuine or a `clone`. |
-| **Admin password set** | Whether the embedded web server password is configured. It gates *writes* only — reads stay open, which is why this integration needs no credentials. |
-| **Mispicks / jams** | Not an alert so much as a trend. A mispick count that starts climbing is a pickup roller glazing over, weeks before it starts eating paper. |
+Once I had the printer responding, I started finding other things that were
+missing or wrong in the existing integrations:
 
-You also get to **name the printer during setup**, and entity IDs follow that
-name — `sensor.laserjet_status`, not `sensor.hp_color_laserjet_mfp_m182nw_192_168_0_64_status`.
+- The same `TotalImpressions` counter appearing under both the printer and
+  the scanner because no one was parsing them in the right context.
+- Cartridges that HP labeled `clone` showing up as the genuine part number
+  (the chip lies about itself; the brand field is what tells the truth).
+- A firmware crash from six months ago still showing as the device's current
+  state, because nothing distinguished the recorded fault from a live one.
+- The most recent event code buried in a thirty-page printed report rather
+  than surfaced as a sensor.
+
+This integration exists to fix that specific set of annoyances while keeping
+the read-only, no-credentials, no-cloud design that the existing options got
+right.
 
 ## Installation
 
@@ -81,13 +88,81 @@ Entities whose data a given model does not report are not created at all —
 a printer with no document feeder, duplexer or fax simply gets fewer entities
 rather than a row of `unknown`.
 
-Depending on the model, entities cover:
+## Entities
 
-- Printer status, page counters, jams, mispicks, firmware information, event
-  history, and diagnostic state.
-- Scanner and copier counters, when those capabilities are present.
-- Per-cartridge level, pages remaining, pages printed, part information, dates,
-  genuine/clone status, and problem state.
+Entities are created only when the printer reports data for them. Diagnostic
+and noisy entities are off by default; turn them on per-entity from the
+device page.
+
+### Printer
+
+| Entity | Type | Notes |
+|---|---|---|
+| Status | sensor (enum) | Current state from the printer's `StatusCategory`. Localised in the integration. |
+| Pages printed | sensor (total_increasing) | Lifetime page count. |
+| Black and white pages | sensor (total_increasing) | Monochrome impressions. |
+| Color pages | sensor (total_increasing) | Color impressions. |
+| Single-sided sheets | sensor (total_increasing) | Simplex sheets. |
+| Double-sided sheets | sensor (total_increasing) | Duplex sheets. |
+| Paper jams | sensor (total_increasing) | Cumulative jam events. |
+| Mispicks | sensor (total_increasing) | Cumulative mispick events. Watch for an upward trend — a pickup roller is glazing over long before paper starts jamming. |
+| Color pages on genuine supplies | sensor (total_increasing) | Color impressions printed with HP-marked cartridges. |
+| Black and white pages on genuine supplies | sensor (total_increasing) | Same, monochrome. |
+| Firmware date | sensor (diagnostic) | Build date of the installed firmware — the only version marker LEDM exposes. |
+| Last event code | sensor (diagnostic) | Most recent fault code (`13.x` paper jams, `49.x` firmware faults, `10.x` supply-memory errors). Full history and any firmware assert text are attached as attributes. |
+| Last event at page | sensor (diagnostic) | Page count at which the most recent event occurred. |
+| Power save timeout | sensor (diagnostic, disabled by default) | The sleep delay the printer is configured to use. |
+| Language pack version | sensor (diagnostic, disabled by default) | The revision of the language pack. |
+| Last job source | sensor (diagnostic, disabled by default) | Application that initiated the most recent print job, with user, name, and page count attached as attributes. |
+| Firmware fault recorded | binary_sensor (diagnostic) | `on` when the printer still has assert text from a recorded firmware crash. This is a *recorded* fault, not a live one — to catch new faults, trigger on the last event code changing. |
+| Genuine supplies enforced | binary_sensor (diagnostic) | `on` when the printer refuses third-party cartridges. A firmware update can switch this back on and stop a working printer. |
+| Admin password set | binary_sensor (diagnostic) | `on` when the EWS admin password is configured. It gates *writes* only — LEDM reads stay open either way, which is why this integration needs no credentials. |
+
+### Scanner
+
+These appear only when the printer has a scanner subunit.
+
+| Entity | Type | Notes |
+|---|---|---|
+| Pages scanned | sensor (total_increasing) | All scan images. |
+| Pages scanned from feeder | sensor (total_increasing) | Pages pulled through the ADF. |
+| Pages scanned from glass | sensor (total_increasing) | Pages scanned from the flatbed. |
+| Scanner jams | sensor (total_increasing) | Jam events attributed to the scanner. |
+| Scanner mispicks | sensor (total_increasing) | Mispick events attributed to the scanner. |
+
+### Copier
+
+These appear only when the printer has a copy subunit.
+
+| Entity | Type | Notes |
+|---|---|---|
+| Pages copied | sensor (total_increasing) | All copy impressions. |
+| Black and white copies | sensor (total_increasing) | Monochrome copy impressions. |
+| Color copies | sensor (total_increasing) | Color copy impressions. |
+
+### Cartridges
+
+Created per cartridge; the cartridge is its own sub-device because each one
+has its own serial number and is replaced independently. The cartridge label
+("Cartridge black", "Cartridge cyan", …) is generated from the colour and
+type the printer reports.
+
+| Entity | Type | Notes |
+|---|---|---|
+| Level | sensor | Manufacturer-rounded remaining percentage. |
+| Pages remaining | sensor | `EstimatedPagesRemaining` for the installed cartridge. |
+| Pages printed | sensor (total_increasing) | Lifetime impressions on the installed cartridge. |
+| Brand | sensor (diagnostic) | "genuinehp" or "clone". HP labels third-party cartridges "clone" even when enforcement is off. |
+| Part number | sensor (diagnostic, disabled by default) | The HP part number the printer expects. |
+| Manufactured | sensor (diagnostic, date) | When the installed cartridge was manufactured. Devices without a real-time clock report `1976-01-01`; the parser discards that. |
+| Warranty expires | sensor (diagnostic, disabled by default, date) | Cartridge warranty expiration. |
+| Level (raw) | sensor (diagnostic, disabled by default) | Unrounded percentage. Useful when the rounded level sits at 1% for weeks. |
+| Low threshold | sensor (diagnostic, disabled by default) | The manufacturer's own low threshold, so automations use a real value rather than guessing. |
+| Previous cartridge developer life | sensor (diagnostic, disabled by default) | Wear counter for the cartridge that was *removed* from this slot, not the one installed. |
+| Previous cartridge drum life | sensor (diagnostic, disabled by default) | Drum wear for the removed cartridge. |
+| Previous cartridge part number | sensor (diagnostic, disabled by default) | Part number of the removed cartridge. |
+| Problem | binary_sensor | `on` when the cartridge state is anything other than the healthy set (`ok`, `newgenuinehp`, `new`, `good`). |
+| Genuine | binary_sensor (diagnostic) | Whether the brand is HP or a clone.
 
 ## Troubleshooting
 
@@ -124,6 +199,58 @@ types, access modes and legal values — and `<Resource>Dyn.xml` carrying curren
 values. The device is, in effect, its own documentation.
 
 All access is read-only (`GET`). This integration never writes to your printer.
+
+## Contributing
+
+Contributions are welcome — this integration exists because the existing
+options were not great, and there is plenty left to fix on the devices I
+cannot test against.
+
+### Reporting a bug
+
+Please open an issue using the **Bug report** template. To make it actionable
+include:
+
+- Your Home Assistant version (Settings → About).
+- Your printer model and firmware date (the **Firmware date** sensor).
+- The integration's debug log.
+- The diagnostics file (Devices & Services → HP Printers → ⋮ → Download
+  diagnostics).
+
+Diagnostics intentionally redact the printer host, serial, UUID, and user
+identifiers, but keep the LEDM payloads — that is what makes it possible to
+investigate unsupported models and missing entities without seeing your
+network.
+
+### Proposing a feature
+
+Open an issue using the **Feature request** template. LEDM is undocumented,
+so the most useful contributions are *evidence first*: capture the relevant
+endpoint response from your printer (a `curl` against the EWS, or a snippet
+from the diagnostics file) and describe what you would surface from it. A
+feature without the source data usually has to wait for someone with the same
+printer to confirm the field.
+
+### Opening a pull request
+
+1. Fork the repository and create a branch from `main`.
+2. Make the change. Run the verification commands from `AGENTS.md`:
+   - `./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests`
+   - `./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests`
+   - `./.venv/bin/python -m compileall -q custom_components/hp_printers tests`
+   - `./.venv/bin/python -m pytest -q`
+3. **Any change that alters functionality must ship with tests.** A bug fix
+   gets a regression test, a new entity gets coverage of the parser path and
+   the entity description it depends on, and a refactor keeps the existing
+   tests green. A PR that changes behaviour without touching `tests/` will
+   be asked to add tests before it can merge.
+4. Update `custom_components/hp_printers/translations/en.json` and the
+   matching `entity:` block in `strings.json` for any new or renamed
+   user-visible entity.
+5. Use the **Pull request** template; label the PR with `bug`, `enhancement`,
+   `documentation`, `breaking`, or `chore` so release-drafter categorises it
+   correctly.
+6. CI must be green on the PR before review.
 
 ## License
 
