@@ -1,0 +1,17 @@
+name: HACS Action
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish to HACS
+        uses: hacs/integration-action@main
+        with:
+          category: integration

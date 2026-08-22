@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: |
+          uv venv .venv --python 3.14
+          uv pip install --python .venv/bin/python ruff defusedxml
+          uv pip install --python .venv/bin/python -r requirements_test.txt
+
+      - name: Ruff lint
+        run: ./.venv/bin/ruff check --config ruff_ha.toml custom_components/hp_printers tests
+
+      - name: Ruff format check
+        run: ./.venv/bin/ruff format --check --config ruff_ha.toml custom_components/hp_printers tests
+
+      - name: Compile check
+        run: ./.venv/bin/python -m compileall -q custom_components/hp_printers tests
+
+      - name: Run tests
+        run: ./.venv/bin/python -m pytest -q
+
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run hassfest
+        uses: home-assistant/actions/hassfest@master
