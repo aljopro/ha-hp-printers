@@ -16,6 +16,9 @@ class ProductInfo:
     serial_number: str | None = None
     product_number: str | None = None
     sku_identifier: str | None = None
+    # When the printer itself was built, from ProductInformation/Manufacturer.
+    # Devices without a real-time clock report a placeholder the parser drops.
+    manufactured_at: datetime | None = None
     uuid: str | None = None
     service_id: str | None = None
     # Firmware build date. Exposed by the device but not surfaced by any other

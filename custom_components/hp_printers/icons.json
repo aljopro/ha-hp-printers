@@ -108,6 +108,27 @@
       },
       "cartridge_previous_part_number": {
         "default": "mdi:history"
+      },
+      "scanner_duplex_sheets": {
+        "default": "mdi:book-open-page-variant-outline"
+      },
+      "copy_adf_pages": {
+        "default": "mdi:tray-arrow-down"
+      },
+      "copy_flatbed_pages": {
+        "default": "mdi:card-scan-outline"
+      },
+      "printer_manufactured_at": {
+        "default": "mdi:factory"
+      },
+      "cartridge_installed_at": {
+        "default": "mdi:calendar-check"
+      },
+      "cartridge_counterfeit_refills": {
+        "default": "mdi:shield-alert-outline"
+      },
+      "cartridge_genuine_refills": {
+        "default": "mdi:refresh"
       }
     },
     "binary_sensor": {

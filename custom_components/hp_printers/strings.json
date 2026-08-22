@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Add an HP printer",
-        "description": "Enter the printer's address. Give it a name to control what its entities are called \u2014 leave it blank to use the model name.",
+        "description": "Enter the printer's address. Give it a name to control what its entities are called — leave it blank to use the model name.",
         "data": {
           "host": "Host or IP address",
           "name": "Name"
@@ -138,6 +138,9 @@
       "scanner_flatbed_images": {
         "name": "Pages scanned from glass"
       },
+      "scanner_duplex_sheets": {
+        "name": "Double-sided sheets scanned"
+      },
       "scanner_jams": {
         "name": "Scanner jams"
       },
@@ -153,8 +156,17 @@
       "copy_color_pages": {
         "name": "Color copies"
       },
+      "copy_adf_pages": {
+        "name": "Pages copied from feeder"
+      },
+      "copy_flatbed_pages": {
+        "name": "Pages copied from glass"
+      },
       "firmware_date": {
         "name": "Firmware date"
+      },
+      "printer_manufactured_at": {
+        "name": "Manufactured"
       },
       "language_pack_version": {
         "name": "Language pack version"
@@ -186,6 +198,9 @@
       "cartridge_manufactured_at": {
         "name": "Manufactured"
       },
+      "cartridge_installed_at": {
+        "name": "Installed"
+      },
       "cartridge_warranty_expires_at": {
         "name": "Warranty expires"
       },
@@ -194,6 +209,12 @@
       },
       "cartridge_low_threshold": {
         "name": "Low threshold"
+      },
+      "cartridge_counterfeit_refills": {
+        "name": "Unauthenticated refills"
+      },
+      "cartridge_genuine_refills": {
+        "name": "Genuine refills"
       },
       "genuine_color_pages": {
         "name": "Color pages on genuine supplies"

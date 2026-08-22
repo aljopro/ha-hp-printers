@@ -126,6 +126,7 @@ def test_printer_sensors_emit_expected_values() -> None:
     assert sensors["printer_jams"].native_value == 2
     assert sensors["printer_mispicks"].native_value == 5
     assert sensors["firmware_date"].native_value == "2025-04-01"
+    assert sensors["manufactured_at"].native_value.isoformat() == "2021-06-15"
     assert sensors["genuine_color_pages"].native_value == 200
     assert sensors["genuine_mono_pages"].native_value == 800
     assert sensors["power_save_timeout"].native_value == "300"
@@ -150,7 +151,10 @@ def test_printer_sensors_drop_when_value_fn_returns_none() -> None:
     """Sensors whose ``value_fn`` returns ``None`` (e.g. unparsed fields) are skipped."""
     coordinator = FakeCoordinator(
         make_product_info(
-            firmware_date=None, power_save_timeout=None, language_pack_version=None
+            firmware_date=None,
+            power_save_timeout=None,
+            language_pack_version=None,
+            manufactured_at=None,
         ),
         make_printer_data(
             events=[],
@@ -163,6 +167,7 @@ def test_printer_sensors_drop_when_value_fn_returns_none() -> None:
     sensors = _printer_sensors(coordinator)
 
     assert "firmware_date" not in sensors
+    assert "manufactured_at" not in sensors
     assert "power_save_timeout" not in sensors
     assert "language_pack_version" not in sensors
     assert "last_event_code" not in sensors
@@ -174,6 +179,7 @@ def test_printer_sensors_drop_when_value_fn_returns_none() -> None:
 def test_subunit_sensors_route_to_scanner_and_copier() -> None:
     """Scanner/copier sensors are attached to sub-devices, not the printer."""
     coordinator = FakeCoordinator(make_product_info(), make_printer_data())
+    routed: dict[str, HPSubunitSensor] = {}
 
     for description in PRINTER_SENSORS:
         if (
@@ -190,6 +196,14 @@ def test_subunit_sensors_route_to_scanner_and_copier() -> None:
         # The ``value_fn`` reaches the right subunit; the resulting
         # native_value is what shows up as the entity state.
         assert entity.native_value is not None
+        routed[description.key] = entity
+
+    # Counters whose name repeats across subunits must read from their own
+    # subunit: the copier's feeder and glass counts are not the scanner's.
+    assert routed["scanner_duplex_sheets"].native_value == 2
+    assert routed["scanner_flatbed_images"].native_value == 3
+    assert routed["copy_adf_pages"].native_value == 12
+    assert routed["copy_flatbed_pages"].native_value == 8
 
 
 def test_consumable_sensors_emit_expected_values() -> None:
@@ -209,6 +223,11 @@ def test_consumable_sensors_emit_expected_values() -> None:
                     warranty_expires_at=datetime(2026, 1, 2, tzinfo=UTC),
                     previous_drum_life=80,
                     previous_part_number="CF500A",
+                    station=2,
+                    consumable_type="toner",
+                    installed_at=datetime(2025, 1, 2, tzinfo=UTC),
+                    counterfeit_refills=1,
+                    genuine_refills=3,
                 )
             }
         ),
@@ -228,6 +247,16 @@ def test_consumable_sensors_emit_expected_values() -> None:
     assert (
         sensors["warranty_expires_at"].native_value.isoformat().startswith("2026-01-02")
     )
+    assert sensors["installed_at"].native_value.isoformat().startswith("2025-01-02")
+    assert sensors["counterfeit_refills"].native_value == 1
+    assert sensors["genuine_refills"].native_value == 3
+    # Slot and type never change for an installed cartridge, so they ride on
+    # the level sensor as attributes rather than as sensors of their own.
+    assert sensors["level"].extra_state_attributes == {
+        "station": 2,
+        "consumable_type": "toner",
+    }
+    assert sensors["pages_remaining"].extra_state_attributes is None
 
 
 def test_consumable_sensors_drop_none_fields() -> None:
@@ -248,6 +277,9 @@ def test_consumable_sensors_drop_none_fields() -> None:
                     previous_part_number=None,
                     part_number=None,
                     brand=None,
+                    installed_at=None,
+                    counterfeit_refills=None,
+                    genuine_refills=None,
                 )
             }
         ),
@@ -263,6 +295,9 @@ def test_consumable_sensors_drop_none_fields() -> None:
     assert "previous_part_number" not in sensors
     assert "manufactured_at" not in sensors
     assert "warranty_expires_at" not in sensors
+    assert "installed_at" not in sensors
+    assert "counterfeit_refills" not in sensors
+    assert "genuine_refills" not in sensors
 
 
 def test_printer_binary_sensors_emit_expected_values() -> None:
@@ -348,11 +383,18 @@ async def test_sensor_setup_entry_filters_missing_subunits() -> None:
         "scanner_images",
         "scanner_adf_images",
         "scanner_flatbed_images",
+        "scanner_duplex_sheets",
         "scanner_jams",
         "scanner_mispicks",
     ):
         assert scanner_key not in sensor_keys
-    for copy_key in ("copy_total_pages", "copy_mono_pages", "copy_color_pages"):
+    for copy_key in (
+        "copy_total_pages",
+        "copy_mono_pages",
+        "copy_color_pages",
+        "copy_adf_pages",
+        "copy_flatbed_pages",
+    ):
         assert copy_key not in sensor_keys
     assert "printer_total_pages" in sensor_keys
 
@@ -399,3 +441,21 @@ async def test_sensor_setup_entry_creates_per_cartridge_entities() -> None:
     unique_ids = {entity._attr_unique_id for entity in added}  # noqa: SLF001
     assert any(uid.startswith("SN-TEST-1234_K_") for uid in unique_ids)
     assert any(uid.startswith("SN-TEST-1234_C_") for uid in unique_ids)
+
+
+def test_consumable_sensor_handles_cartridge_disappearing() -> None:
+    """A cartridge removed between refreshes yields no value and no attributes."""
+    coordinator = FakeCoordinator(
+        make_product_info(),
+        make_printer_data(consumables={"K": make_consumable(station=2)}),
+    )
+    sensors = _consumable_sensors_with_data(coordinator, "K")
+    level = sensors["level"]
+    pages = sensors["pages_remaining"]
+
+    # The entity outlives the data: the next refresh reports no cartridges.
+    coordinator.data = make_printer_data(consumables={})
+
+    assert level.native_value is None
+    assert level.extra_state_attributes is None
+    assert pages.extra_state_attributes is None

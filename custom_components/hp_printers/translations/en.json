@@ -60,7 +60,8 @@
     "abort": {
       "already_configured": "This printer is already set up.",
       "serial_mismatch": "That address belongs to a different printer than the one this entry was created for.",
-      "cannot_connect": "Found a printer, but could not read from it. It may be asleep, or it may not support the management interface this integration uses."
+      "cannot_connect": "Found a printer, but could not read from it. It may be asleep, or it may not support the management interface this integration uses.",
+      "reconfigure_to_resolve": "This integration reads the printer without credentials. Update the host address from the integration's settings to continue."
     }
   },
   "options": {
@@ -83,6 +84,173 @@
     },
     "update_error": {
       "message": "Error fetching data from {device}: {error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "cancelling": "Cancelling job",
+          "closedoorcover": "Door open",
+          "copying": "Copying",
+          "inpowersave": "Asleep",
+          "initializing": "Starting up",
+          "nomediainstalled": "No media",
+          "off": "Off",
+          "outofpaper": "Out of paper",
+          "papermisfeed": "Paper misfeed",
+          "processing": "Printing",
+          "ready": "Ready",
+          "scanning": "Scanning",
+          "shuttingdown": "Shutting down",
+          "trayempty": "Tray empty",
+          "unknown": "Unknown"
+        }
+      },
+      "printer_total_pages": {
+        "name": "Pages printed"
+      },
+      "printer_mono_pages": {
+        "name": "Black and white pages"
+      },
+      "printer_color_pages": {
+        "name": "Color pages"
+      },
+      "printer_simplex_sheets": {
+        "name": "Single-sided sheets"
+      },
+      "printer_duplex_sheets": {
+        "name": "Double-sided sheets"
+      },
+      "printer_jams": {
+        "name": "Paper jams"
+      },
+      "printer_mispicks": {
+        "name": "Mispicks"
+      },
+      "scanner_images": {
+        "name": "Pages scanned"
+      },
+      "scanner_adf_images": {
+        "name": "Pages scanned from feeder"
+      },
+      "scanner_flatbed_images": {
+        "name": "Pages scanned from glass"
+      },
+      "scanner_duplex_sheets": {
+        "name": "Double-sided sheets scanned"
+      },
+      "scanner_jams": {
+        "name": "Scanner jams"
+      },
+      "scanner_mispicks": {
+        "name": "Scanner mispicks"
+      },
+      "copy_total_pages": {
+        "name": "Pages copied"
+      },
+      "copy_mono_pages": {
+        "name": "Black and white copies"
+      },
+      "copy_color_pages": {
+        "name": "Color copies"
+      },
+      "copy_adf_pages": {
+        "name": "Pages copied from feeder"
+      },
+      "copy_flatbed_pages": {
+        "name": "Pages copied from glass"
+      },
+      "firmware_date": {
+        "name": "Firmware date"
+      },
+      "printer_manufactured_at": {
+        "name": "Manufactured"
+      },
+      "language_pack_version": {
+        "name": "Language pack version"
+      },
+      "last_event_code": {
+        "name": "Last event code"
+      },
+      "last_event_page": {
+        "name": "Last event at page"
+      },
+      "last_job_source": {
+        "name": "Last job source"
+      },
+      "cartridge_level": {
+        "name": "Level"
+      },
+      "cartridge_pages_remaining": {
+        "name": "Pages remaining"
+      },
+      "cartridge_pages_printed": {
+        "name": "Pages printed"
+      },
+      "cartridge_brand": {
+        "name": "Brand"
+      },
+      "cartridge_part_number": {
+        "name": "Part number"
+      },
+      "cartridge_manufactured_at": {
+        "name": "Manufactured"
+      },
+      "cartridge_installed_at": {
+        "name": "Installed"
+      },
+      "cartridge_warranty_expires_at": {
+        "name": "Warranty expires"
+      },
+      "cartridge_raw_level": {
+        "name": "Level (raw)"
+      },
+      "cartridge_low_threshold": {
+        "name": "Low threshold"
+      },
+      "cartridge_counterfeit_refills": {
+        "name": "Unauthenticated refills"
+      },
+      "cartridge_genuine_refills": {
+        "name": "Genuine refills"
+      },
+      "genuine_color_pages": {
+        "name": "Color pages on genuine supplies"
+      },
+      "genuine_mono_pages": {
+        "name": "Black and white pages on genuine supplies"
+      },
+      "power_save_timeout": {
+        "name": "Power save timeout"
+      },
+      "cartridge_previous_developer_life": {
+        "name": "Previous cartridge developer life"
+      },
+      "cartridge_previous_drum_life": {
+        "name": "Previous cartridge drum life"
+      },
+      "cartridge_previous_part_number": {
+        "name": "Previous cartridge part number"
+      }
+    },
+    "binary_sensor": {
+      "firmware_fault": {
+        "name": "Firmware fault recorded"
+      },
+      "genuine_supplies_only": {
+        "name": "Genuine supplies enforced"
+      },
+      "admin_password_set": {
+        "name": "Admin password set"
+      },
+      "cartridge_problem": {
+        "name": "Problem"
+      },
+      "cartridge_genuine": {
+        "name": "Genuine"
+      }
     }
   }
 }

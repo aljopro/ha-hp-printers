@@ -111,6 +111,7 @@ device page.
 | Firmware date | sensor (diagnostic) | Build date of the installed firmware — the only version marker LEDM exposes. |
 | Last event code | sensor (diagnostic) | Most recent fault code (`13.x` paper jams, `49.x` firmware faults, `10.x` supply-memory errors). Full history and any firmware assert text are attached as attributes. |
 | Last event at page | sensor (diagnostic) | Page count at which the most recent event occurred. |
+| Manufactured | sensor (diagnostic, disabled by default, date) | When the printer was built, from `ProductInformation/Manufacturer`. Many models — including the M182nw — do not report it, and then no entity is created. |
 | Power save timeout | sensor (diagnostic, disabled by default) | The sleep delay the printer is configured to use. |
 | Language pack version | sensor (diagnostic, disabled by default) | The revision of the language pack. |
 | Last job source | sensor (diagnostic, disabled by default) | Application that initiated the most recent print job, with user, name, and page count attached as attributes. |
@@ -127,6 +128,7 @@ These appear only when the printer has a scanner subunit.
 | Pages scanned | sensor (total_increasing) | All scan images. |
 | Pages scanned from feeder | sensor (total_increasing) | Pages pulled through the ADF. |
 | Pages scanned from glass | sensor (total_increasing) | Pages scanned from the flatbed. |
+| Double-sided sheets scanned | sensor (total_increasing) | Duplex sheets pulled through the feeder. Feederless models do not report it. |
 | Scanner jams | sensor (total_increasing) | Jam events attributed to the scanner. |
 | Scanner mispicks | sensor (total_increasing) | Mispick events attributed to the scanner. |
 
@@ -139,6 +141,8 @@ These appear only when the printer has a copy subunit.
 | Pages copied | sensor (total_increasing) | All copy impressions. |
 | Black and white copies | sensor (total_increasing) | Monochrome copy impressions. |
 | Color copies | sensor (total_increasing) | Color copy impressions. |
+| Pages copied from feeder | sensor (total_increasing) | Copy impressions sourced from the ADF. |
+| Pages copied from glass | sensor (total_increasing) | Copy impressions sourced from the flatbed. |
 
 ### Cartridges
 
@@ -149,15 +153,18 @@ type the printer reports.
 
 | Entity | Type | Notes |
 |---|---|---|
-| Level | sensor | Manufacturer-rounded remaining percentage. |
+| Level | sensor | Manufacturer-rounded remaining percentage. The cartridge's slot (`station`) and type (`consumable_type`) are attached as attributes — both are fixed for the life of the cartridge, so they are not sensors of their own. |
 | Pages remaining | sensor | `EstimatedPagesRemaining` for the installed cartridge. |
 | Pages printed | sensor (total_increasing) | Lifetime impressions on the installed cartridge. |
 | Brand | sensor (diagnostic) | "genuinehp" or "clone". HP labels third-party cartridges "clone" even when enforcement is off. |
 | Part number | sensor (diagnostic, disabled by default) | The HP part number the printer expects. |
 | Manufactured | sensor (diagnostic, date) | When the installed cartridge was manufactured. Devices without a real-time clock report `1976-01-01`; the parser discards that. |
+| Installed | sensor (diagnostic, date) | When the cartridge was installed. Printers without a real-time clock report `1976-01-01`, which the parser discards, so the entity is absent on those models. |
 | Warranty expires | sensor (diagnostic, disabled by default, date) | Cartridge warranty expiration. |
 | Level (raw) | sensor (diagnostic, disabled by default) | Unrounded percentage. Useful when the rounded level sits at 1% for weeks. |
 | Low threshold | sensor (diagnostic, disabled by default) | The manufacturer's own low threshold, so automations use a real value rather than guessing. |
+| Unauthenticated refills | sensor (diagnostic, disabled by default) | Refills the cartridge chip recorded but could not authenticate. Not by itself a fault. |
+| Genuine refills | sensor (diagnostic, disabled by default) | Refills the chip recorded as genuine. |
 | Previous cartridge developer life | sensor (diagnostic, disabled by default) | Wear counter for the cartridge that was *removed* from this slot, not the one installed. |
 | Previous cartridge drum life | sensor (diagnostic, disabled by default) | Drum wear for the removed cartridge. |
 | Previous cartridge part number | sensor (diagnostic, disabled by default) | Part number of the removed cartridge. |

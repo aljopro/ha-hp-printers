@@ -237,6 +237,7 @@ class LEDMClient:
             serial_number=_text(info, "SerialNumber"),
             product_number=_text(info, "ProductNumber"),
             sku_identifier=_text(info, "SKUIdentifier"),
+            manufactured_at=_date(info, "Manufacturer", "Date"),
             uuid=_text(info, "UUID"),
             service_id=_text(info, "ServiceID"),
             firmware_date=_text(info, "Version", "Date"),

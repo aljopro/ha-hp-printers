@@ -41,6 +41,7 @@ class HPConsumableSensorDescription(SensorEntityDescription):
     """Describes a cartridge-level sensor."""
 
     value_fn: Callable[[Consumable], StateType | date]
+    attrs_fn: Callable[[Consumable], dict[str, Any]] | None = None
 
 
 def _counter(
@@ -123,6 +124,12 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         lambda d: d.scanner.flatbed_images,
         "scanner",
     ),
+    _counter(
+        "scanner_duplex_sheets",
+        "scanner_duplex_sheets",
+        lambda d: d.scanner.duplex_sheets,
+        "scanner",
+    ),
     _counter("scanner_jams", "scanner_jams", lambda d: d.scanner.jam_events, "scanner"),
     _counter(
         "scanner_mispicks",
@@ -149,12 +156,34 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         lambda d: d.copy.color_impressions,
         "copy",
     ),
+    _counter(
+        "copy_adf_pages",
+        "copy_adf_pages",
+        lambda d: d.copy.adf_images,
+        "copy",
+    ),
+    _counter(
+        "copy_flatbed_pages",
+        "copy_flatbed_pages",
+        lambda d: d.copy.flatbed_images,
+        "copy",
+    ),
     # --- diagnostics: firmware and the device event log ---
     HPPrinterSensorDescription(
         key="firmware_date",
         translation_key="firmware_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda _data, info: info.firmware_date,
+    ),
+    HPPrinterSensorDescription(
+        key="manufactured_at",
+        translation_key="printer_manufactured_at",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda _data, info: (
+            info.manufactured_at.date() if info.manufactured_at else None
+        ),
     ),
     _counter(
         "genuine_color_pages",
@@ -233,6 +262,13 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.level_percent,
+        # Station is the physical slot and type is what the slot holds. Both
+        # are fixed for the life of the cartridge, so they ride along as
+        # attributes rather than becoming sensors that never change.
+        attrs_fn=lambda c: {
+            "station": c.station,
+            "consumable_type": c.consumable_type,
+        },
     ),
     HPConsumableSensorDescription(
         key="pages_remaining",
@@ -311,6 +347,32 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda c: c.manufactured_at.date() if c.manufactured_at else None,
+    ),
+    HPConsumableSensorDescription(
+        key="installed_at",
+        translation_key="cartridge_installed_at",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda c: c.installed_at.date() if c.installed_at else None,
+    ),
+    # Refill counts come from the cartridge's own chip. A non-zero counterfeit
+    # count is how the device says it has seen a refill it could not
+    # authenticate -- it does not by itself mean the cartridge is bad.
+    HPConsumableSensorDescription(
+        key="counterfeit_refills",
+        translation_key="cartridge_counterfeit_refills",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.counterfeit_refills,
+    ),
+    HPConsumableSensorDescription(
+        key="genuine_refills",
+        translation_key="cartridge_genuine_refills",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda c: c.genuine_refills,
     ),
     HPConsumableSensorDescription(
         key="warranty_expires_at",
@@ -405,3 +467,12 @@ class HPConsumableSensor(HPConsumableEntity, SensorEntity):
         if (consumable := self.consumable) is None:
             return None
         return self.entity_description.value_fn(consumable)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return supplementary detail, where the sensor defines any."""
+        if self.entity_description.attrs_fn is None:
+            return None
+        if (consumable := self.consumable) is None:
+            return None
+        return self.entity_description.attrs_fn(consumable)

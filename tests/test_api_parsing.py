@@ -9,6 +9,7 @@ used by devices without a real-time clock, and the ``PreviousCartridgeData``
 subtree that shares field names with the installed cartridge.
 """
 
+from datetime import datetime
 import ssl
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -171,6 +172,10 @@ async def test_async_get_product_info_extracts_nested_values() -> None:
                 <MakeAndModel>HP Color LaserJet MFP M182nw</MakeAndModel>
                 <SerialNumber>SN-1</SerialNumber>
                 <Version><Date>2025-04-01T00:00:00</Date></Version>
+                <Manufacturer>
+                  <Name>HP</Name>
+                  <Date>2021-06-15T00:00:00</Date>
+                </Manufacturer>
                 <PasswordStatus>set</PasswordStatus>
               </ProductInformation>
               <FriendlyName>Office printer</FriendlyName>
@@ -185,6 +190,9 @@ async def test_async_get_product_info_extracts_nested_values() -> None:
     assert info.make_and_model == "HP Color LaserJet MFP M182nw"
     assert info.serial_number == "SN-1"
     assert info.firmware_date == "2025-04-01T00:00:00"
+    # The build date lives beside the firmware Version date; each must be
+    # resolved within its own parent rather than by document order.
+    assert info.manufactured_at == datetime(2021, 6, 15)
     assert info.password_set is True
     assert info.friendly_name == "Office printer"
     assert info.power_save_timeout == "300"

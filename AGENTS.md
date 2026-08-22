@@ -96,6 +96,16 @@ milliseconds. Use the right layer for the change:
   writes an `unavailable` state for each registered entity instead, so
   assert on `STATE_UNAVAILABLE` rather than on absence.
 
+- A real capture from an HP Color LaserJet MFP M182nw lives in
+  `tests/fixtures/m182nw/`. `tests/test_api_fixtures.py` pins its known
+  values, which is also the record of what that model does **not** report:
+  no `ProductInformation/Manufacturer`, no refill counters, no ADF or
+  duplex counters, and an `Installation/Date` of `1976-01-01` because the
+  device has no real-time clock.
+- `scripts/captures/` is git-ignored: raw captures contain the real serial
+  number. Only the reviewed, anonymized copy under `tests/fixtures/`
+  belongs in the repository.
+
 ## Capturing fixtures from a real printer
 
 Real LEDM payloads are the highest-value test input because they capture
