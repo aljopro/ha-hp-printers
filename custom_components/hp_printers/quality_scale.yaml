@@ -23,16 +23,21 @@ rules:
   entity-event-setup: done
   config-entry-unloading: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: >-
+      LEDM is read without credentials, so there is nothing to
+      reauthenticate. async_step_reauth aborts with guidance to
+      reconfigure the host instead.
   test-coverage: done
   devices: done
   diagnostics: done
   discovery: done
   entity-category: done
   entity-disabled-by-default: done
-  entity-translations: todo
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

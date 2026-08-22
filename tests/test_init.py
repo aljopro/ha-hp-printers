@@ -163,3 +163,44 @@ async def test_coordinator_backs_off_while_the_printer_is_unreachable(
     await coordinator.async_refresh()
     assert coordinator.last_update_success is True
     assert coordinator.update_interval == configured
+
+
+async def test_entities_go_unavailable_and_recover(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    mock_config_entry,
+    mock_ledm_client,
+    caplog,
+):
+    """Entities follow the coordinator, and each transition is logged once."""
+    entry = mock_config_entry
+    await setup_integration(hass, entry)
+    coordinator = entry.runtime_data
+
+    status = next(
+        eid for eid in hass.states.async_entity_ids("sensor") if eid.endswith("_status")
+    )
+    assert hass.states.get(status).state != STATE_UNAVAILABLE
+
+    mock_ledm_client.async_get_data.side_effect = HPPrinterConnectionError("asleep")
+    caplog.clear()
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(status).state == STATE_UNAVAILABLE
+    # The log has to name the printer: with two entries configured, the
+    # domain alone does not say which one stopped answering.
+    assert entry.title in caplog.text
+
+    # A second failure must not repeat the message.
+    caplog.clear()
+    await coordinator.async_refresh()
+    assert "Error fetching" not in caplog.text
+
+    mock_ledm_client.async_get_data.side_effect = None
+    caplog.clear()
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(status).state != STATE_UNAVAILABLE
+    assert "recovered" in caplog.text

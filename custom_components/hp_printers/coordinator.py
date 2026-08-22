@@ -99,7 +99,11 @@ class HPPrinterDataUpdateCoordinator(DataUpdateCoordinator[PrinterData]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
+            # The coordinator name is what the base class prints when the
+            # device goes unavailable and when it recovers. With more than
+            # one printer configured, the domain alone does not say which
+            # one stopped answering.
+            name=f"{DOMAIN} {config_entry.title}",
             update_interval=update_interval,
         )
 
