@@ -66,6 +66,11 @@ BRAND_CLONE: Final = "clone"
 # the case where it would be plainly wrong. Capability documents are
 # device-specific -- a laser declares only "toner" -- so unknown values fall
 # back rather than being guessed at.
+#
+# These are English words, and they are only needed to label a consumable
+# whose colour is not one this integration recognises. Every recognised
+# noun/colour pair is named by looking up a translation instead -- see
+# consumable_device_key.
 CONSUMABLE_NOUNS: Final = {
     "printhead": "Printhead",
     "inktank": "Ink Tank",
@@ -74,6 +79,7 @@ CONSUMABLE_NOUNS: Final = {
 }
 DEFAULT_CONSUMABLE_NOUN: Final = "Cartridge"
 
+# ConsumableLabelCode -> MarkerColor, as the two documents spell it.
 COLOR_NAMES: Final = {
     "K": "black",
     "C": "cyan",
@@ -81,3 +87,30 @@ COLOR_NAMES: Final = {
     "Y": "yellow",
     "CMY": "tricolor",
 }
+KNOWN_COLORS: Final = frozenset(COLOR_NAMES.values())
+
+# Sub-device name keys, looked up from the ``subunit`` field rather than from
+# a label the caller has to remember to pass alongside it.
+SUBUNIT_KEYS: Final = {
+    "scanner": "subunit_scanner",
+    "copy": "subunit_copier",
+}
+
+
+def consumable_device_key(noun: str, color: str | None) -> str:
+    """Return the device translation key that names a consumable sub-device.
+
+    The printer reports both halves of the name in English, so a translated
+    name has to be a lookup rather than a string assembled at runtime. Every
+    known noun/colour pair is its own key under the ``device`` block, which is
+    also what lets a translation put the two in its own order: English reads
+    "Black Cartridge", Chinese reads "黑色墨盒".
+
+    A colour outside ``KNOWN_COLORS`` is a model this integration has never
+    seen, and guessing at a key would render the raw key as the device name.
+    Those take the fallback, which interpolates the English label -- the same
+    name the integration showed before there were any translations.
+    """
+    if color not in KNOWN_COLORS:
+        return "consumable_other"
+    return f"consumable_{'_'.join(noun.strip().lower().split())}_{color}"

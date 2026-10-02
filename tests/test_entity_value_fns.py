@@ -27,7 +27,6 @@ from custom_components.hp_printers.models import NetworkHealth, SubunitUsage
 from custom_components.hp_printers.sensor import (
     CONSUMABLE_SENSORS,
     PRINTER_SENSORS,
-    SUBUNIT_LABELS,
     HPConsumableSensor,
     HPPrinterSensor,
     HPSubunitSensor,
@@ -211,7 +210,6 @@ def test_subunit_sensors_route_to_scanner_and_copier() -> None:
             coordinator,
             description,
             description.subunit,
-            SUBUNIT_LABELS[description.subunit],
         )
         # The ``value_fn`` reaches the right subunit; the resulting
         # native_value is what shows up as the entity state.

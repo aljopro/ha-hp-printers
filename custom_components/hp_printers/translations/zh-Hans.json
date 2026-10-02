@@ -1,0 +1,418 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "添加 HP 打印机",
+        "description": "输入打印机的地址。填写名称可以自定义实体的命名方式——留空则使用型号名称。",
+        "data": {
+          "host": "主机名或 IP 地址",
+          "name": "名称"
+        },
+        "data_description": {
+          "host": "建议使用打印机的 mDNS 名称，例如 NPI2E7F3D.local，这样地址变化后依然有效。IP 地址也可以。",
+          "name": "用于设备及其所有实体 ID。建议使用简短名称。"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "高级设置",
+            "data": {
+              "port": "端口",
+              "ssl": "使用 HTTPS"
+            },
+            "data_description": {
+              "port": "打印机内置 Web 服务器的端口。保持 80，启用 HTTPS 后会自动切换到 443。",
+              "ssl": "打印机使用自签名证书，不会对其做校验。"
+            }
+          }
+        }
+      },
+      "reconfigure": {
+        "title": "重新配置打印机",
+        "description": "修改 Home Assistant 访问这台打印机的方式。必须仍然是同一台实体设备。",
+        "data": {
+          "host": "主机名或 IP 地址"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "高级设置",
+            "data": {
+              "port": "端口",
+              "ssl": "使用 HTTPS"
+            }
+          }
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "已发现 HP 打印机",
+        "description": "在 {host} 发现了 {model}。填写名称可以自定义实体的命名方式，留空则使用型号名称。",
+        "data": {
+          "name": "名称"
+        },
+        "data_description": {
+          "name": "用于设备及其所有实体 ID。建议使用简短名称。"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "无法连接到打印机。请检查地址，并确认打印机已开机。",
+      "not_ledm": "该主机有响应，但它看起来不是一台内置 Web 服务器受支持的 HP 打印机。"
+    },
+    "abort": {
+      "already_configured": "这台打印机已经配置过了。",
+      "serial_mismatch": "该地址对应的打印机与创建此条目时的打印机不是同一台。",
+      "cannot_connect": "发现了打印机，但无法读取。它可能处于休眠状态，或不支持本集成所用的管理接口。",
+      "reconfigure_to_resolve": "本集成无需凭据即可读取打印机。请在本集成的设置中更新主机地址以继续。"
+    }
+  },
+  "device": {
+    "consumable_cartridge_black": {
+      "name": "{device_name} 黑色墨盒"
+    },
+    "consumable_cartridge_cyan": {
+      "name": "{device_name} 青色墨盒"
+    },
+    "consumable_cartridge_magenta": {
+      "name": "{device_name} 品红色墨盒"
+    },
+    "consumable_cartridge_tricolor": {
+      "name": "{device_name} 三色墨盒"
+    },
+    "consumable_cartridge_yellow": {
+      "name": "{device_name} 黄色墨盒"
+    },
+    "consumable_drum_black": {
+      "name": "{device_name} 黑色硒鼓"
+    },
+    "consumable_drum_cyan": {
+      "name": "{device_name} 青色硒鼓"
+    },
+    "consumable_drum_magenta": {
+      "name": "{device_name} 品红色硒鼓"
+    },
+    "consumable_drum_tricolor": {
+      "name": "{device_name} 三色硒鼓"
+    },
+    "consumable_drum_yellow": {
+      "name": "{device_name} 黄色硒鼓"
+    },
+    "consumable_ink_tank_black": {
+      "name": "{device_name} 黑色墨仓"
+    },
+    "consumable_ink_tank_cyan": {
+      "name": "{device_name} 青色墨仓"
+    },
+    "consumable_ink_tank_magenta": {
+      "name": "{device_name} 品红色墨仓"
+    },
+    "consumable_ink_tank_tricolor": {
+      "name": "{device_name} 三色墨仓"
+    },
+    "consumable_ink_tank_yellow": {
+      "name": "{device_name} 黄色墨仓"
+    },
+    "consumable_maintenance_kit_black": {
+      "name": "{device_name} 黑色维护套件"
+    },
+    "consumable_maintenance_kit_cyan": {
+      "name": "{device_name} 青色维护套件"
+    },
+    "consumable_maintenance_kit_magenta": {
+      "name": "{device_name} 品红色维护套件"
+    },
+    "consumable_maintenance_kit_tricolor": {
+      "name": "{device_name} 三色维护套件"
+    },
+    "consumable_maintenance_kit_yellow": {
+      "name": "{device_name} 黄色维护套件"
+    },
+    "consumable_other": {
+      "name": "{device_name} {label}"
+    },
+    "consumable_printhead_black": {
+      "name": "{device_name} 黑色打印头"
+    },
+    "consumable_printhead_cyan": {
+      "name": "{device_name} 青色打印头"
+    },
+    "consumable_printhead_magenta": {
+      "name": "{device_name} 品红色打印头"
+    },
+    "consumable_printhead_tricolor": {
+      "name": "{device_name} 三色打印头"
+    },
+    "consumable_printhead_yellow": {
+      "name": "{device_name} 黄色打印头"
+    },
+    "subunit_copier": {
+      "name": "{device_name} 复印机"
+    },
+    "subunit_scanner": {
+      "name": "{device_name} 扫描仪"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "轮询",
+        "description": "读取打印机的频率。打印机在作业之间会休眠，而轮询会唤醒它，因此频率越低对设备越友好。",
+        "data": {
+          "scan_interval_seconds": "更新间隔"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "无法连接到 {device}：{error}"
+    },
+    "serial_mismatch": {
+      "message": "{device} 上报的序列号与预期不符。该地址可能已指向另一台打印机。"
+    },
+    "update_error": {
+      "message": "从 {device} 获取数据时出错：{error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "状态",
+        "state": {
+          "cancelling": "正在取消作业",
+          "closedoorcover": "舱门打开",
+          "copying": "复印中",
+          "inpowersave": "已休眠",
+          "initializing": "启动中",
+          "nomediainstalled": "未安装介质",
+          "off": "已关机",
+          "outofpaper": "缺纸",
+          "papermisfeed": "进纸异常",
+          "processing": "打印中",
+          "ready": "就绪",
+          "scanning": "扫描中",
+          "shuttingdown": "正在关机",
+          "trayempty": "纸盒已空",
+          "unknown": "未知"
+        }
+      },
+      "printer_total_pages": {
+        "name": "已打印页数",
+        "unit_of_measurement": "页"
+      },
+      "printer_mono_pages": {
+        "name": "黑白页数",
+        "unit_of_measurement": "页"
+      },
+      "printer_color_pages": {
+        "name": "彩色页数",
+        "unit_of_measurement": "页"
+      },
+      "printer_simplex_sheets": {
+        "name": "单面打印张数",
+        "unit_of_measurement": "页"
+      },
+      "printer_duplex_sheets": {
+        "name": "双面打印张数",
+        "unit_of_measurement": "页"
+      },
+      "printer_jams": {
+        "name": "卡纸次数",
+        "unit_of_measurement": "页"
+      },
+      "printer_mispicks": {
+        "name": "错误进纸次数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_images": {
+        "name": "已扫描页数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_adf_images": {
+        "name": "自动进稿器扫描页数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_flatbed_images": {
+        "name": "平板扫描页数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_duplex_sheets": {
+        "name": "双面扫描张数",
+        "unit_of_measurement": "页"
+      },
+      "scan_job_pages": {
+        "name": "扫描任务页数",
+        "unit_of_measurement": "页"
+      },
+      "scan_job_adf_pages": {
+        "name": "自动进稿器扫描任务页数",
+        "unit_of_measurement": "页"
+      },
+      "scan_job_flatbed_pages": {
+        "name": "平板扫描任务页数",
+        "unit_of_measurement": "页"
+      },
+      "scan_job_duplex_sheets": {
+        "name": "双面扫描任务张数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_jams": {
+        "name": "扫描仪卡纸次数",
+        "unit_of_measurement": "页"
+      },
+      "scanner_mispicks": {
+        "name": "扫描仪错误进纸次数",
+        "unit_of_measurement": "页"
+      },
+      "copy_total_pages": {
+        "name": "已复印页数",
+        "unit_of_measurement": "页"
+      },
+      "copy_mono_pages": {
+        "name": "黑白复印页数",
+        "unit_of_measurement": "页"
+      },
+      "copy_color_pages": {
+        "name": "彩色复印页数",
+        "unit_of_measurement": "页"
+      },
+      "copy_adf_pages": {
+        "name": "自动进稿器复印页数",
+        "unit_of_measurement": "页"
+      },
+      "copy_flatbed_pages": {
+        "name": "平板复印页数",
+        "unit_of_measurement": "页"
+      },
+      "firmware_date": {
+        "name": "固件日期"
+      },
+      "printer_manufactured_at": {
+        "name": "生产日期"
+      },
+      "language_pack_version": {
+        "name": "语言包版本"
+      },
+      "last_event_code": {
+        "name": "最近事件代码"
+      },
+      "last_event_page": {
+        "name": "最近事件所在页",
+        "unit_of_measurement": "页"
+      },
+      "network_errors": {
+        "name": "网络错误数"
+      },
+      "network_link_mode": {
+        "name": "链路模式"
+      },
+      "network_bad_packets": {
+        "name": "收到的错误包数",
+        "unit_of_measurement": "包"
+      },
+      "network_framing_errors": {
+        "name": "帧错误数",
+        "unit_of_measurement": "包"
+      },
+      "network_transmit_collisions": {
+        "name": "发送冲突数",
+        "unit_of_measurement": "包"
+      },
+      "network_late_collisions": {
+        "name": "延迟冲突数",
+        "unit_of_measurement": "包"
+      },
+      "network_unsendable_packets": {
+        "name": "无法发送的包数",
+        "unit_of_measurement": "包"
+      },
+      "network_packets_received": {
+        "name": "收到的包数",
+        "unit_of_measurement": "包"
+      },
+      "network_packets_transmitted": {
+        "name": "发出的包数",
+        "unit_of_measurement": "包"
+      },
+      "last_job_source": {
+        "name": "最近作业来源"
+      },
+      "cartridge_level": {
+        "name": "余量",
+        "unit_of_measurement": "%"
+      },
+      "cartridge_pages_remaining": {
+        "name": "剩余页数",
+        "unit_of_measurement": "页"
+      },
+      "cartridge_pages_printed": {
+        "name": "已打印页数",
+        "unit_of_measurement": "页"
+      },
+      "cartridge_brand": {
+        "name": "品牌"
+      },
+      "cartridge_part_number": {
+        "name": "料号"
+      },
+      "cartridge_manufactured_at": {
+        "name": "生产日期"
+      },
+      "cartridge_installed_at": {
+        "name": "安装日期"
+      },
+      "cartridge_warranty_expires_at": {
+        "name": "保修到期"
+      },
+      "cartridge_raw_level": {
+        "name": "余量（原始值）",
+        "unit_of_measurement": "%"
+      },
+      "cartridge_low_threshold": {
+        "name": "低余量阈值",
+        "unit_of_measurement": "%"
+      },
+      "cartridge_counterfeit_refills": {
+        "name": "未认证补充次数"
+      },
+      "cartridge_genuine_refills": {
+        "name": "已认证补充次数"
+      },
+      "genuine_color_pages": {
+        "name": "正版耗材彩色页数",
+        "unit_of_measurement": "页"
+      },
+      "genuine_mono_pages": {
+        "name": "正版耗材黑白页数",
+        "unit_of_measurement": "页"
+      },
+      "power_save_timeout": {
+        "name": "休眠超时时间"
+      },
+      "cartridge_previous_developer_life": {
+        "name": "上一个墨盒显影组件寿命"
+      },
+      "cartridge_previous_drum_life": {
+        "name": "上一个墨盒硒鼓寿命"
+      },
+      "cartridge_previous_part_number": {
+        "name": "上一个墨盒料号"
+      }
+    },
+    "binary_sensor": {
+      "firmware_fault": {
+        "name": "已记录固件故障"
+      },
+      "genuine_supplies_only": {
+        "name": "已启用正版耗材强制"
+      },
+      "admin_password_set": {
+        "name": "已设置管理员密码"
+      },
+      "cartridge_problem": {
+        "name": "异常"
+      },
+      "cartridge_genuine": {
+        "name": "原装"
+      }
+    }
+  }
+}

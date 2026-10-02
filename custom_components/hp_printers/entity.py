@@ -4,7 +4,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONSUMABLE_NOUNS, DEFAULT_CONSUMABLE_NOUN, DOMAIN, MANUFACTURER
+from .const import (
+    CONSUMABLE_NOUNS,
+    DEFAULT_CONSUMABLE_NOUN,
+    DOMAIN,
+    MANUFACTURER,
+    SUBUNIT_KEYS,
+    consumable_device_key,
+)
 from .coordinator import HPPrinterDataUpdateCoordinator
 from .models import Consumable
 
@@ -55,7 +62,6 @@ class HPSubunitEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
         coordinator: HPPrinterDataUpdateCoordinator,
         description: EntityDescription,
         subunit: str,
-        subunit_label: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -70,7 +76,14 @@ class HPSubunitEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
             via_device=(DOMAIN, printer_serial),
             manufacturer=MANUFACTURER,
             model=info.make_and_model,
-            name=f"{coordinator.config_entry.title} {subunit_label}",
+            # The sub-device is named by a translation rather than by a name
+            # built here. Only the part the integration owns -- "Scanner",
+            # "Copier" -- is translated; the printer's own name is the user's,
+            # so it comes through as a placeholder.
+            translation_key=SUBUNIT_KEYS[subunit],
+            translation_placeholders={
+                "device_name": coordinator.config_entry.title,
+            },
         )
 
 
@@ -99,15 +112,15 @@ class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
         printer_serial = info.serial_number or coordinator.config_entry.entry_id
         consumable = self.consumable
 
-        colour = (consumable.color_name if consumable else None) or label_code
-        pretty = colour.replace("_", " ").title()
-
         # The noun leads the colour so consumables sort as one contiguous
         # block rather than being split apart by the other sub-devices.
         kind = (consumable.consumable_type if consumable else None) or ""
         noun = CONSUMABLE_NOUNS.get(
             kind.strip().lower().replace(" ", ""), DEFAULT_CONSUMABLE_NOUN
         )
+        # color_name is None for a label code this integration does not know,
+        # which consumable_device_key routes to the untranslated fallback.
+        color = (consumable.color_name if consumable else None) or None
 
         self._attr_unique_id = f"{printer_serial}_{label_code}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -116,7 +129,11 @@ class HPConsumableEntity(CoordinatorEntity[HPPrinterDataUpdateCoordinator]):
             manufacturer=(consumable.brand if consumable else None) or MANUFACTURER,
             model=consumable.part_number if consumable else None,
             serial_number=consumable.serial_number if consumable else None,
-            name=f"{coordinator.config_entry.title} {noun} {pretty}",
+            translation_key=consumable_device_key(noun, color),
+            translation_placeholders={
+                "device_name": coordinator.config_entry.title,
+                "label": f"{noun} {color or label_code}",
+            },
         )
 
     @property

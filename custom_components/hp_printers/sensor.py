@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -23,8 +23,6 @@ from .models import Consumable, NetworkHealth, PrinterData, ProductInfo
 
 PARALLEL_UPDATES = 0
 
-PAGES = "pages"
-PACKETS = "packets"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,7 +53,6 @@ def _counter(
     return HPPrinterSensorDescription(
         key=key,
         translation_key=translation_key,
-        native_unit_of_measurement=PAGES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data, _info: getter(data),
         subunit=subunit,
@@ -69,22 +66,18 @@ def _network_counter(
 ):
     """Build a network counter, off by default.
 
-    These are packet counts, not pages: PACKETS rather than PAGES, and
-    diagnostic because they mean nothing to someone who is not chasing a
-    connectivity problem.
+    These are packet counts rather than page counts, and diagnostic because
+    they mean nothing to someone who is not chasing a connectivity problem.
+    The unit itself comes from the translations, like every other unit here.
     """
     return HPPrinterSensorDescription(
         key=key,
         translation_key=translation_key,
-        native_unit_of_measurement=PACKETS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data, _info: getter(data.network),
     )
-
-
-SUBUNIT_LABELS = {"scanner": "Scanner", "copy": "Copier"}
 
 
 PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
@@ -283,7 +276,6 @@ PRINTER_SENSORS: tuple[HPPrinterSensorDescription, ...] = (
         key="last_event_page",
         translation_key="last_event_page",
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PAGES,
         value_fn=lambda data, _info: (
             data.last_event.impressions if data.last_event else None
         ),
@@ -365,7 +357,6 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
     HPConsumableSensorDescription(
         key="level",
         translation_key="cartridge_level",
-        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.level_percent,
         # Station is the physical slot and type is what the slot holds. Both
@@ -379,21 +370,18 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
     HPConsumableSensorDescription(
         key="pages_remaining",
         translation_key="cartridge_pages_remaining",
-        native_unit_of_measurement=PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.pages_remaining,
     ),
     HPConsumableSensorDescription(
         key="pages_printed",
         translation_key="cartridge_pages_printed",
-        native_unit_of_measurement=PAGES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda c: c.total_impressions,
     ),
     HPConsumableSensorDescription(
         key="raw_level",
         translation_key="cartridge_raw_level",
-        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -402,7 +390,6 @@ CONSUMABLE_SENSORS: tuple[HPConsumableSensorDescription, ...] = (
     HPConsumableSensorDescription(
         key="low_threshold",
         translation_key="cartridge_low_threshold",
-        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         # The manufacturer's own low point, so a low-toner automation can use
@@ -508,7 +495,6 @@ async def async_setup_entry(
             coordinator,
             description,
             description.subunit,
-            SUBUNIT_LABELS[description.subunit],
         )
         if description.subunit
         else HPPrinterSensor(coordinator, description)
